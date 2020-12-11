@@ -1,51 +1,54 @@
-# This is a version of transaction written by mark
+"""
+This is a version of transaction written by mark
+"""
+
+import time
 
 """
 One Transaction Object
-|   inTx       |   inSig   |   outTx   |   reciverPubKey   |  isUsed  |
-|  Txn-index_1 | SHA256-...|  10 BTC   |     12387908      |  False   |
-|  Txn-index_2 | SHA256-...|   5 BTC   |     23456789      |   True   |
+|   inTx         |   inSig   |   outTx   |   reciverPubKey   |  isUsed  |
+|  [txn1, index] | SHA256-...|  10 BTC   |     12387908      |  False   |
+|  [txn2, index] | SHA256-...|   5 BTC   |     23456789      |   True   |
 ...
+
+allTransaction is a dictionary, key [Transaction Number (txn)] -> value [Transaction object]
 """
 
 class Transaction:
-    def __init__(self, allTransaction, amount, reciverPubKey, myPrivateKey, myPubKey):
-        """
-        self.reciverPubKey is a list of public keys. the #0 of key correspond to the 
-        #0 transaction in self.outTx
-        self.inTx is a list representing how money come from.
-        """
-        self.inTx = []
-        self.inSig = []
-        self.outTx = []
-        self.reciverPubKeys = []
-        self.isUsed = []
-        # You should not save the private key in Transaction object.
+    def __init__(self):
+        self.inTransaction = []
+        self.outTransaction = []
 
-        myTxs = self.findMyTransaction(allTransaction, myPubKey)
-        currCount = 0
-        for Txn, i in myTxs:
-            self.inTx.append((Txn, i))
-            currCount += allTransaction[Txn].outTx[i]
-            if currCount > amount: break
+    def addInputTransaction(self, txn, index, Signature):
+        self.inTransaction.append((txn, index, Signature))
+    
+    def addOutputTransaction(self, amount, reciverPubKey):
+        self.outTransaction.append((amount, reciverPubKey, False))
+    
+    def checkIsBalance(self, allTransaction):
+        outputAmount, inputAmount = 0, 0
+
+        for index in range(len(self.inTransaction)):
+            in_txn, in_index, signature = self.inTransaction[index]
+            inputAmount += allTransaction[in_txn].outTransaction[in_index][0]
         
-        self.outTx.append(amount)
-        self.reciverPubKeys.append(reciverPubKey)
-        self.isUsed.append(False)
-
-        if currCount > amount:
-            self.outTx.append(currCount - amount)
-            self.reciverPubKeys.append(myPubKey)
-            self.isUsed.append(False)
-
-    def findMyTransaction(self, allTransaction, myPubKey):
-        myTransaction = []
-
-        for Txn in allTransaction.keys():       # Txn is the transaction ID
-            for i in range(len(allTransaction[Txn].reciverPubKeys)):
-                if allTransaction[Txn].reciverPubKeys[i] == myPubKey and allTransaction[Txn].isUsed[i] == False:
-                    myTransaction.append((Txn, i))
+        for index in range(len(self.outTransaction)):
+            outputAmount += self.outTransaction[index][0]
         
-        return myTransaction
+        return inputAmount == outputAmount
+    
+    def checkInUnused(self, allTransaction):
+        for index in range(len(self.inTransaction)):
+            in_txn, in_index, signature = self.inTransaction[index]
+            prev_tx = allTransaction[in_txn].outTransaction[in_index]
+            if prev_tx[2]: return False # if any one of in_tx is already used before, the whole transaction is invalid
+        return True
+    
+    def checkInSig(self, allTransaction):
+        for index in range(len(self.inTransaction)):
+            in_txn, in_index = self.inTransaction[index]
+            prev_tx = allTransaction[in_txn]
 
+            prev_pubKey = prev_tx.outTransaction[in_index][1]
+            prev_sig = self.inTransaction[index][]
 
