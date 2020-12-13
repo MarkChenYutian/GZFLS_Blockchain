@@ -16,8 +16,12 @@ allTransaction is a dictionary, key [Transaction Number (txn)] -> value [Transac
 
 class Transaction:
     def __init__(self):
+        self.tx_time = int(time.time() * 1000)
         self.inTransaction = []
         self.outTransaction = []
+    
+    def __hash__(self):
+        return hash(self.tx_time) * hash(self.inTransaction) * hash(self.outTransaction)
 
     def addInputTransaction(self, txn, index, Signature):
         self.inTransaction.append((txn, index, Signature))
@@ -46,9 +50,17 @@ class Transaction:
     
     def checkInSig(self, allTransaction):
         for index in range(len(self.inTransaction)):
-            in_txn, in_index = self.inTransaction[index]
+            in_txn, in_index, signature = self.inTransaction[index]
             prev_tx = allTransaction[in_txn]
 
             prev_pubKey = prev_tx.outTransaction[in_index][1]
-            prev_sig = self.inTransaction[index][]
+            prev_sig = self.inTransaction[index][2]
+            sig_result = decryptSignature(prev_sig, prev_pubKey)
+
+            if sig_result != hash(prev_tx): return False
+        return True
+
+
+def decryptSignature(signature, pubKey):
+    pass
 
