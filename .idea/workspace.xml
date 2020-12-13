@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="84f70424-e62f-401f-8c8a-dff0a231faee" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/buildVersion/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/buildVersion/Transaction_Project/Transaction.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testing" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testingL" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="JupyterTrust" id="73a2cc3a-9080-4d5f-b736-74168fc120a9" />
+  <component name="ProjectId" id="1lV82dSaFvgXYJTClmRBwBuslbY" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="84f70424-e62f-401f-8c8a-dff0a231faee" name="Default Changelist" comment="" />
+      <created>1607670693551</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1607670693551</updated>
+      <workItem from="1607670694615" duration="72000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
