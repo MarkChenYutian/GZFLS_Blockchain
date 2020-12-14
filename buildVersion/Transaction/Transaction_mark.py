@@ -28,37 +28,59 @@ class Transaction:
     
     def addOutputTransaction(self, amount, reciverPubKey):
         self.outTransaction.append((amount, reciverPubKey, False))
-    
-    def checkIsBalance(self, allTransaction):
-        outputAmount, inputAmount = 0, 0
 
-        for index in range(len(self.inTransaction)):
-            in_txn, in_index, signature = self.inTransaction[index]
-            inputAmount += allTransaction[in_txn].outTransaction[in_index][0]
-        
-        for index in range(len(self.outTransaction)):
-            outputAmount += self.outTransaction[index][0]
-        
-        return inputAmount == outputAmount
-    
-    def checkInUnused(self, allTransaction):
-        for index in range(len(self.inTransaction)):
-            in_txn, in_index, signature = self.inTransaction[index]
-            prev_tx = allTransaction[in_txn].outTransaction[in_index]
-            if prev_tx[2]: return False # if any one of in_tx is already used before, the whole transaction is invalid
-        return True
-    
-    def checkInSig(self, allTransaction):
-        for index in range(len(self.inTransaction)):
-            in_txn, in_index, signature = self.inTransaction[index]
-            prev_tx = allTransaction[in_txn]
+def isCoinBase(transaction):
+    pass
 
-            prev_pubKey = prev_tx.outTransaction[in_index][1]
-            prev_sig = self.inTransaction[index][2]
-            sig_result = decryptSignature(prev_sig, prev_pubKey)
+def checkIsBalance(currTransaction, allTransaction):
+    outputAmount, inputAmount = 0, 0
 
-            if sig_result != hash(prev_tx): return False
-        return True
+    for index in range(len(currTransaction.inTransaction)):
+        in_txn, in_index, signature = currTransaction.inTransaction[index]
+        inputAmount += allTransaction[in_txn].outTransaction[in_index][0]
+    
+    for index in range(len(currTransaction.outTransaction)):
+        outputAmount += currTransaction.outTransaction[index][0]
+    
+    return inputAmount == outputAmount
+
+def checkInUnused(currTransaction, allTransaction):
+    for index in range(len(currTransaction.inTransaction)):
+        in_txn, in_index, signature = currTransaction.inTransaction[index]
+        prev_tx = allTransaction[in_txn].outTransaction[in_index]
+        if prev_tx[2]: return False # if any one of in_tx is already used before, the whole transaction is invalid
+    return True
+
+def checkInSig(currTransaction, allTransaction):
+    for index in range(len(currTransaction.inTransaction)):
+        in_txn, in_index, signature = currTransaction.inTransaction[index]
+        prev_tx = allTransaction[in_txn]
+
+        prev_pubKey = prev_tx.outTransaction[in_index][1]
+        prev_sig = currTransaction.inTransaction[index][2]
+        sig_result = decryptSignature(prev_sig, prev_pubKey)
+
+        if sig_result != hash(prev_tx): return False
+    return True
+
+def getTxn(transaction):
+    return hash(transaction)
+
+def checkRecursiveTx(currTransaction, allTransaction):
+    if isCoinBase(currTransaction): return True
+
+    if not (checkInSig(currTransaction, allTransaction) and checkIsBalance(currTransaction, allTransaction)):
+        return False
+
+    isValid = True
+    for index in range(len(currTransaction.inTransaction)):
+        in_txn, in_index, signature = currTransaction.inTransaction[index]
+        if in_txn not in allTransaction: return False   # Transaction not in ledger
+        isValid = isValid and checkRecursiveTx(allTransaction[in_txn], allTransaction)
+    return isValid
+
+def checkTransaction(transaction, allTransaction):
+    return checkRecursiveTx(transaction, allTransaction) and checkInUnused(transaction, allTransaction)
 
 
 def decryptSignature(signature, pubKey):
