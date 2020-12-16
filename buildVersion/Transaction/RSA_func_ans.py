@@ -64,7 +64,7 @@ def generateMyKeys():
     q = getRandomBigPrime()
     n = p * q
     phi = calcPhi(p, q)
-    publicKey = 65537
+    publicKey = getRandomBigPrime(bitLength=16)
     privateKey, k = extendEuclidean(publicKey, phi)
 
     """ WRITE YOUR CODE ABOVE """
