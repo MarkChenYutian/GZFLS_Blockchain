@@ -16,9 +16,9 @@ class Transaction:
         |---------------+-----------------------------+---------------------------------|
         |               |  Txn  |  index  | Signature | Amount | ReciverPubKey | isUsed |
         |               |-------+---------+-----------+--------+---------------+--------|
-        |     False     |1233456|    0    | [tokens]  |   50   |     13579     | False  |
-        |               |1233457|    2    | [tokens]  |   50   |     24580     | False  |
-        |               |1233458|    0    | [tokens]  |        |               |        |
+        |     False     |1233456|    0    | (tokens)  |   50   |     13579     | False  |
+        |               |1233457|    2    | (tokens)  |   50   |     24580     | False  |
+        |               |1233458|    0    | (tokens)  |        |               |        |
         =================================================================================
         One tuple in the self.inTransaction represents a tuple in a specific Transaction object's 
         .outTransaction property.

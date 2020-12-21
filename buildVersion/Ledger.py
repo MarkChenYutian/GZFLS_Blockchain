@@ -11,6 +11,7 @@ class Ledger(dict):
     def addTransaction(self, Transaction):
         try:
             self.checkRecursiveTx(Transaction)
+            self.checkInSig(Transaction)
             for Txn, index, signature in Transaction.inTransaction:
                 self[Txn].outTransaction[index][2] = True
             super().update({hash(Transaction): Transaction})
@@ -27,7 +28,8 @@ class Ledger(dict):
         for index in range(len(Transaction.outTransaction)):
             outputAmount += Transaction.outTransaction[index][0]
         
-        return inputAmount == outputAmount
+        if inputAmount != outputAmount: raise TranactionNotBalanceError()
+        return
     
     def checkIsUnused(self, Transaction):
         for index in range(len(Transaction.inTransaction)):
@@ -39,20 +41,14 @@ class Ledger(dict):
     def checkRecursiveTx(self, Transaction):
         if isCoinBase(Transaction): return True
 
-        # TODO: we need to check the signature in Transaction as well
-        if not self.checkIsBalance(Transaction):
-            raise TranactionNotBalanceError()
-
+        self.checkIsBalance(Transaction)
+        self.checkInSig(Transaction)
         isValid = True
         for index in range(len(Transaction.inTransaction)):
             in_txn, in_index, signature = Transaction.inTransaction[index]
             if in_txn not in self: raise TransactionInNotExist()   # Transaction not in ledger
             isValid = isValid and self.checkRecursiveTx(self[in_txn])
         return isValid
-    
-    def checkSignatureValid(self, Transaction):
-        N = Transaction.myN
-        
     
     def getBalanceStat(self):
         balance = dict()
@@ -66,16 +62,16 @@ class Ledger(dict):
         
         return balance
     
-    def checkInSig(currTransaction, allTransaction):
+    def checkInSig(self, currTransaction):
         for index in range(len(currTransaction.inTransaction)):
             in_txn, in_index, signature = currTransaction.inTransaction[index]
-            prev_tx = allTransaction[in_txn]
+            prev_tx = self[in_txn]
 
             prev_pubKey = prev_tx.outTransaction[in_index][1]
             prev_sig = currTransaction.inTransaction[index][2]
             sig_result = decryptSignature(prev_sig, prev_pubKey, currTransaction.myN)
 
-            if sig_result != hash(prev_tx): return False
+            if sig_result != hash(prev_tx): raise TransactionSignatureError()
         return True
     
     def __str__(self):
@@ -90,6 +86,10 @@ class Ledger(dict):
         
     def __repr__(self):
         return str(self)
+    
+    def exportFile(self, fileName="Ledger.txt"):
+        with open(fileName, "w") as exportFile:
+            exportFile.write(str(self))
 
 def isCoinBase(transaction):
     return transaction.isCoinBase
@@ -114,7 +114,9 @@ class TransactionInNotExist(Exception):
         super().__init__(self.message)
 
 class TransactionSignatureError(Exception):
-    pass
+    def __init__(self, message="Signature in the given inTransaction fail to Pass the Signature Pass."):
+        self.message = message
+        super().__init__(self.message)
 
 if __name__ == "__main__":
     A = Ledger()
