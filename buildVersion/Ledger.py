@@ -80,7 +80,7 @@ class Ledger(dict):
         result +="| Ledger Balence Statistics: " + str(self.getBalanceStat()) + "\n"
         for Txn in self.keys():
             result += str(self[Txn])
-            result += "\n\n"
+            result += "\n|\n"
         result +="------------ Transactions Stored in Ledger Above ----------\n"
         return result
         

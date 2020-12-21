@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # Tampered Transaction Test
     # B --- 10 ---x---> A
     newTx = Transaction(allTransaction, 10, RSA_keys["B"][1], RSA_keys["B"][0], RSA_keys["B"][2], RSA_keys["A"][1])
-    newTx.outTransaction[0][0] = 20
+    # newTx.outTransaction[0][0] = 20
     try:
         allTransaction.addTransaction(newTx)
     except:
