@@ -3,12 +3,23 @@ This is a version of transaction written by mark
 """
 from RSA_func import *
 from random import random
+from Ledger import Ledger
 import time
 
 class Transaction:
-    def __init__(self, allTransaction, amount, myPubKey, myPrivateKey, myN, reciverPubKey, isCoinBase=False):
+    def __init__(self, allTransaction: Ledger, amount: int, myPubKey: tuple, myPrivateKey: tuple, receiverPubKey: tuple, isCoinBase=False):
         """
+        :params:
+        allTransaction - the ledger that store all valid transactions
+        amount - the amount of coin you want to transact to others
+        myPubKey - a tuple (myPublicKey, myN)
+        myPrivateKey - a tuple (myPrivateKey, myN)
+        receiverPubKey - a tuple (receiverPublicKey, receiverN)
+
+        :returns: None
+
         Create a new transaction object that has appropriate .inTransaction and .outTransaction proprties.
+        If the transaction is from COINBASE, the .inTransaction can be empty.
 
         Structure of Transaction Object
         =================================================================================
@@ -16,11 +27,11 @@ class Transaction:
         |---------------+-----------------------------+---------------------------------|
         |               |  Txn  |  index  | Signature | Amount | ReciverPubKey | isUsed |
         |               |-------+---------+-----------+--------+---------------+--------|
-        |     False     |1233456|    0    | (tokens)  |   50   |     13579     | False  |
-        |               |1233457|    2    | (tokens)  |   50   |     24580     | False  |
+        |     False     |1233456|    0    | (tokens)  |   50   |  (pubKey, n)  | False  |
+        |               |1233457|    2    | (tokens)  |   50   |  (pubKey, n)  | False  |
         |               |1233458|    0    | (tokens)  |        |               |        |
         =================================================================================
-        One tuple in the self.inTransaction represents a tuple in a specific Transaction object's 
+        One tuple in the self.inTransaction represents a tuple in a specific Transaction object's
         .outTransaction property.
         """
         #### Properties that is used to form Unique ID (Txn) for one Transaction Object ###
@@ -31,16 +42,12 @@ class Transaction:
 
         ############# The Important Properties of a Transaction Object ####################
         self.isCoinBase = isCoinBase
-        self.myN = myN
         self.inTransaction = []
         self.outTransaction = []
         ###################################################################################
-
         if isCoinBase:
-        ### Write the process to create Transaction Object if Tx is created by COINBASE ###
-            self.addOutputTransaction(amount, reciverPubKey)
+            self.addOutputTransaction(amount, receiverPubKey)
             return
-        ####################################################################################
 
         myBalance = getMyTransaction(allTransaction, myPubKey)
 
@@ -49,14 +56,15 @@ class Transaction:
 
         for Txn, index in myBalance:
             curr_in += allTransaction[Txn].outTransaction[index][0]
-            self.addInputTransaction(Txn, index, signSignature(allTransaction[Txn], myPrivateKey, myN))
+            self.addInputTransaction(Txn, index, signSignature(allTransaction[Txn], myPrivateKey))
             if curr_in == amount:
-                self.addOutputTransaction(amount, reciverPubKey)
+                self.addOutputTransaction(amount, receiverPubKey)
                 break
             elif curr_in > amount:
-                self.addOutputTransaction(amount, reciverPubKey)
+                self.addOutputTransaction(amount, receiverPubKey)
                 self.addOutputTransaction(curr_in - amount, myPubKey)
                 break
+
         #####################################################################################
 
     def addInputTransaction(self, txn, index, Signature):
@@ -114,5 +122,8 @@ def getMyTransaction(allTransaction, pubKey):
             if outTx[1] == pubKey and (not outTx[2]): MyTransactions.append((Txn, index))
     return MyTransactions   # My Transaction is a list with structure (Txn, index)
 
-def signSignature(transaction, privateKey, n):
-    return tuple(encryptObject(hash(transaction), privateKey, n))
+def signSignature(transaction, privateKey: tuple):
+    """
+    Sign the signature on given Transaction, the privateKey is a tuple (privateKey: int, N: int)
+    """
+    return tuple(encryptObject(hash(transaction), privateKey[0], privateKey[1]))
