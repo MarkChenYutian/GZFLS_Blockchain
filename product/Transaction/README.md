@@ -71,7 +71,7 @@ D_in -.80.-> B_out
 
 ```
 
-<center>Fig 1. Example Case for Transaction Formation</center>
+<div style="text-align: center;">Fig 1. Example Case for Transaction Formation</div>
 
 Suppose we want to add a new transaction, *Transaction D* that transact 140 coins someone into the ledger, and the money in `Transaction D` comes from `C` and `B` (dashed line). Here's the thing that will happen:
 
@@ -96,7 +96,7 @@ Suppose we want to add a new transaction, *Transaction D* that transact 140 coin
    D_out --60--> Owner
    ```
 
-   <center>Fig 2. Example of Charge and Balance of Transaction</center>
+   <div style="text-align: center;">Fig 2. Example of Charge and Balance of Transaction</div>
 
 4. Therefore, we put two entries to `outTransaction` property in Transaction D, (suppose Coin Receiver's `pubKey` is `0001` and the Coin Receiver's `pubKey` is `0002`). The `outTransaction` now contains `(140, 0002, False)` and `(60, 0001, False)`.
 

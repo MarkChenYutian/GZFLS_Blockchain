@@ -42,6 +42,17 @@ class Ledger(dict):
         """
         """ WRITE YOUR CODE BELOW """
         pass
+
+    def checkInSig(self, currTransaction):
+        """
+        :param: Transaction - a transaction object that needs to be added into the Ledger
+        :return: None
+
+        In this function, you should check whether each signature in entry of .inTransaction is valid. If any of
+        the signature is invalid, raise TransactionSignatureError.
+        """
+        """ WRITE YOUR CODE BELOW """
+        pass
     
     def checkRecursiveTx(self, Transaction):
         """
@@ -64,17 +75,7 @@ class Ledger(dict):
         """ WRITE YOUR CODE BELOW """
         pass
     
-    def checkInSig(self, currTransaction):
-        for index in range(len(currTransaction.inTransaction)):
-            in_txn, in_index, signature = currTransaction.inTransaction[index]
-            prev_tx = self[in_txn]
 
-            prev_pubKey = prev_tx.outTransaction[in_index][1]
-            prev_sig = currTransaction.inTransaction[index][2]
-            sig_result = decryptSignature(prev_sig, prev_pubKey)
-
-            if sig_result != hash(prev_tx): raise TransactionSignatureError()
-        return True
     
     def __str__(self):
         result ="| Status | Current Number of Transaction Stored: {}\n".format(len(self))
@@ -97,7 +98,20 @@ def isCoinBase(transaction):
     return transaction.isCoinBase
 
 def decryptSignature(signature, pubKey: tuple):
-    return decryptObject(signature, pubKey[0], pubKey[1])
+    """
+    :param: signature - a tuple of tokens formed by encryptObject in RSA_func.py, pubKey - a tuple of integers that contain
+    (pubKey, N)
+    :return: the decryption result of encrypted message.
+
+    If decryption fail, the normal Exception will be raised instead of the TransactionSignatureError. You can use a
+    try:
+        ...
+    except:
+        ...
+    structure to 'catch' the exception raised by decryptObject and then raise the TransactionSignatureError instead.
+    """
+    """ WRITE YOUR CODE HERE """
+    pass
 
 if __name__ == "__main__":
     A = Ledger()
