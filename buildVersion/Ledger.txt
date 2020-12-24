@@ -1,0 +1,88 @@
+| Status | Current Number of Transaction Stored: 9
+------------ Transactions Stored in Ledger Below ----------
+| Ledger Balence Statistics: {(44587, 645059): 40, (64567, 594883): 60, (32843, 533461): 30, (51257, 592271): 70, (44633, 854429): 50}
+============ Transaction ===============
+| Txn: 16087749681008 
+| THIS TRANSACTION IS FROM COINBASE 
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 50 | (44587, 645059) | True
+========================================
+|
+============ Transaction ===============
+| Txn: 16087749676854 
+| THIS TRANSACTION IS FROM COINBASE 
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 50 | (64567, 594883) | True
+========================================
+|
+============ Transaction ===============
+| Txn: 16087749673557 
+| THIS TRANSACTION IS FROM COINBASE 
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 50 | (32843, 533461) | True
+========================================
+|
+============ Transaction ===============
+| Txn: 16087749677545 
+| THIS TRANSACTION IS FROM COINBASE 
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 50 | (51257, 592271) | False
+========================================
+|
+============ Transaction ===============
+| Txn: 16087749676176 
+| THIS TRANSACTION IS FROM COINBASE 
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 50 | (44633, 854429) | False
+========================================
+|
+============ Transaction ===============
+| Txn: 3133798483241744042 
+| In Transactions:
+| Txn | Index | Signature |
+| 16087749681008 | 0 | (6420, 257922, 269018, 300005, 317804, 4445)
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 40 | (64567, 594883) | True
+| 10 | (44587, 645059) | False
+========================================
+|
+============ Transaction ===============
+| Txn: 7145242520705698686 
+| In Transactions:
+| Txn | Index | Signature |
+| 16087749676854 | 0 | (224491, 312107, 409742, 274965, 385298, 418040)
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 10 | (32843, 533461) | False
+| 40 | (64567, 594883) | False
+========================================
+|
+============ Transaction ===============
+| Txn: 8080533400661251722 
+| In Transactions:
+| Txn | Index | Signature |
+| 16087749673557 | 0 | (478366, 313332, 274522, 54282, 532112, 77364)
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 30 | (44587, 645059) | False
+| 20 | (32843, 533461) | False
+========================================
+|
+============ Transaction ===============
+| Txn: 4662756140786435210 
+| In Transactions:
+| Txn | Index | Signature |
+| 3133798483241744042 | 0 | (14249, 56352, 78086, 261680, 16024, 471549, 11732)
+| Out Transactions:
+| Amount | reciver PubKey | isUsed
+| 20 | (51257, 592271) | False
+| 20 | (64567, 594883) | False
+========================================
+|
+------------ Transactions Stored in Ledger Above ----------

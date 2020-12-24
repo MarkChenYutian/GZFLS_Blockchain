@@ -18,7 +18,7 @@ class Ledger(dict):
         """
         try:
             self.checkRecursiveTx(Transaction)
-            self.checkInSig(Transaction)
+            self.checkIsUnused(Transaction)
             for Txn, index, signature in Transaction.inTransaction:
                 self[Txn].outTransaction[index][2] = True
             super().update({hash(Transaction): Transaction})
@@ -38,7 +38,10 @@ class Ledger(dict):
 
         for index in range(len(Transaction.inTransaction)):
             in_txn, in_index, signature = Transaction.inTransaction[index]
-            inputAmount += self[in_txn].outTransaction[in_index][0]
+            try:
+                inputAmount += self[in_txn].outTransaction[in_index][0]
+            except KeyError:
+                raise TransactionInNotExist()
 
         for index in range(len(Transaction.outTransaction)):
             outputAmount += Transaction.outTransaction[index][0]
@@ -57,14 +60,23 @@ class Ledger(dict):
         for index in range(len(Transaction.inTransaction)):
             in_txn, in_index, signature = Transaction.inTransaction[index]
             prev_tx = self[in_txn].outTransaction[in_index]
-            if prev_tx[2]: return False # if any one of in_tx is already used before, the whole transaction is invalid
-        return True
+            if prev_tx[2]: raise TransactionDoubleSpendError() # if any one of in_tx is already used before, the whole transaction is invalid
     
     def checkRecursiveTx(self, Transaction):
         """
         :param: Transaction - a transaction object that needs to be added into the Ledger
         :return: None
         """
+        if isCoinBase(Transaction): return True
+
+        self.checkIsBalance(Transaction)
+        self.checkInSig(Transaction)
+        isValid = True
+        for index in range(len(Transaction.inTransaction)):
+            in_txn,in_index,signature = Transaction.inTransaction [index]
+            if in_txn not in self: raise TransactionInNotExist()  # Transaction not in ledger
+            isValid = isValid and self.checkRecursiveTx(self[in_txn])
+        return isValid
     
     def getBalanceStat(self):
         balance = dict()
@@ -72,9 +84,8 @@ class Ledger(dict):
         for txn in self.keys():
             for index in range(len(self[txn].outTransaction)):
                 amount, pubkey, isUsed = self[txn].outTransaction[index]
-                if not isUsed:
-                    if pubkey in balance: balance[pubkey] += amount
-                    else: balance[pubkey] = amount
+                if pubkey not in balance: balance[pubkey] = 0
+                if not isUsed: balance[pubkey] += amount
 
         return balance
     
@@ -85,7 +96,10 @@ class Ledger(dict):
 
             prev_pubKey = prev_tx.outTransaction[in_index][1]
             prev_sig = currTransaction.inTransaction[index][2]
-            sig_result = decryptSignature(prev_sig, prev_pubKey)
+            try:
+                sig_result = decryptSignature(prev_sig, prev_pubKey)
+            except:
+                raise TransactionSignatureError()
 
             if sig_result != hash(prev_tx): raise TransactionSignatureError()
         return True
