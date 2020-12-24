@@ -177,6 +177,7 @@ except Exception as e:
 if WARNING_Count == 0:
     print("\n\n\033[32mCongratulation! You passed All the tests with 0 Warning and 0 Error.\033[0;;m \n\n")
 else:
+    test_Ledger.exportFile()
     print("\n\n\033[33mThough the implementation does NOT has FATAL ERROR, there are {} Warnings. "
           "Running through the autograder does NOT mean your implementation is correct since there are Warnings."
-          "You should debug on your implementation to solve all Warnings.\033[0;;m \n\n")
+          "You should debug on your implementation to solve all Warnings. File Ledger.txt is exported in the working directory to help you debug.\033[0;;m \n\n")

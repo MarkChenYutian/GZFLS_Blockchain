@@ -154,3 +154,60 @@ In this project, you will implement the following functions to create a Transact
 | `class Ledger.checkInSig(...)`                               | Given a new Transaction, check whether all the signatures in input transactions are valid.<br />That is, check whether the decryption result of all signatures are equal to the hash of corresponding transaction. |
 | `class Ledger.checkRecursiveTx(...)`                         | Given a new Transaction, use three check functions above to see whether the transaction is valid in an recursive way until the COINBASE is met. (We will trust any transaction from COINBASE without any condition) |
 
+## 1.5 AutoGrader.py
+
+In this project, we use a specially designed `autograder` to test your implementation. It will give feedback based on the exception find on your implementation. Run `autograder.py` directly to test your files.
+
+If your implementation is correct, the output will be like this
+
+```bash
+Autograder Start @ 2020-12-24 09:50:14.499625
+V 1.0.0 By Mark
+If you have any problem with Autograder, ask on the WeChat group directly
+--------------------------
+Test Case 1. Create Ledger and RSA_keys to setup test environment
+[Pass]  | Ledger is created.
+[Pass]  | RSA Keys Created.
+[Pass]  | Ledger.getBalanceStat() Function returns a dictionary.
+
+Test Case 2. Creating Simple Transactions between Users
+[Pass]  | Transaction from COINBASE is accepted.
+[Pass]  | Basic Transaction between Peoples are processed correctly.
+
+[Pass]  | Ledger detect the modified Transaction and raise TransactionNotBalanceError as expected.
+[Pass]  | Ledger detect the signature created by A is invalid and raise TransactionSignatureError as expected.
+[Pass]  | Ledger detect that the input transaction of the new transaction is invalid and raise TransactionInNotExist as expected.
+
+
+Congratulation! You passed All the tests with 0 Warning and 0 Error.
+```
+
+If the output is not something like this, follow the instruction & exceptions raised by the `autograder` and improve your implementation.
+
+This is what will happen when you run the `autograder` without any implementation.
+
+```bash
+Autograder Start @ 2020-12-24 09:50:14.499625
+V 1.0.0 By Mark
+If you have any problem with Autograder, ask on the WeChat group directly
+--------------------------
+Test Case 1. Create Ledger and RSA_keys to setup test environment
+[Pass]  | Ledger is created.
+[Pass]  | RSA Keys Created.
+[Warn]  | Ledger.getBalanceStat() function does NOT return a dictionary, instead, it returns an object with type <class 'NoneType'>. Since we need this function for test cases below, the cases below may raise Exceptions due to this.
+Autograder will continue to run.
+
+Test Case 2. Creating Simple Transactions between Users
+[Warn]  | Some (All) of the Transactions from COINBASE failed to add into the ledger. This may be caused by improper validation in Ledger.addTransaction.
+Autograder will continue to run.
+[Fatal] | The valid transactions between people are blocked by the ledger. Autograder Terminated.
+Detailed Exceptions is raised.
+Traceback (most recent call last):
+  File ".../Transaction/AutoGrader.py", line 102, in <module>
+    raise e
+  File ".../Transaction/AutoGrader.py", line 97, in <module>
+    assert len(set(test_Ledger.getBalanceStat().values()) - {40, 60, 30, 70, 50}) == 0
+AttributeError: 'NoneType' object has no attribute 'values'
+```
+
+Good Luck and Happy Coding!
