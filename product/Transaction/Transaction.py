@@ -25,7 +25,7 @@ class Transaction:
         =================================================================================
         |   isCoinBase  |       inTransaction         |       outTransaction            |
         |---------------+-----------------------------+---------------------------------|
-        |               |  Txn  |  index  | Signature | Amount | ReciverPubKey | isUsed |
+        |               |  Txn  |  index  | Signature | Amount | ReceiverPubKey| isUsed |
         |               |-------+---------+-----------+--------+---------------+--------|
         |     False     |1233456|    0    | (tokens)  |   50   |  (pubKey, n)  | False  |
         |               |1233457|    2    | (tokens)  |   50   |  (pubKey, n)  | False  |
@@ -67,7 +67,6 @@ class Transaction:
         """
         Return a positive integer that represents the Unique Transaction ID (Txn) of current Transaction.
         """
-        """ WRITE YOUR CODE BELOW """
         return hash(self)
 
     ############ You Needn't Read & SHOULD NOT Modify the Functions in this class Below #############

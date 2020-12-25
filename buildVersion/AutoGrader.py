@@ -3,7 +3,7 @@ from Transaction import *
 from Ledger import *
 from RSA_func import generateMyKeys
 
-print("Autograder Start @ {}\nV 1.0.0 By Mark \nIf you have any problem with Autograder, "
+print("Autograder Start @ {}\nV 1.0.1 By Mark \nIf you have any problem with Autograder, "
       "ask on the WeChat group directly\n--------------------------".format(datetime.datetime.now()))
 print("Setting Test Environment ...", end="", flush=False)
 
@@ -61,7 +61,7 @@ try:
         WARNING_Count += 1
         print(
             WARNING + "\033[0;;m Some (All) of the Transactions from COINBASE failed to add into the ledger. "
-                      "This may be caused by improper validation in Ledger.addTransaction. \nAutograder will "
+                      "This may cause by improper validation in Ledger.addTransaction. \nAutograder will "
                       "continue to run.")
     else:
         print(PASS + "\033[0;;m Transaction from COINBASE is accepted.")
@@ -174,10 +174,12 @@ except Exception as e:
     raise e
 
 ######################################################
+print("\n--------------------")
+
 if WARNING_Count == 0:
     print("\n\n\033[32mCongratulation! You passed All the tests with 0 Warning and 0 Error.\033[0;;m \n\n")
 else:
     test_Ledger.exportFile()
-    print("\n\n\033[33mThough the implementation does NOT has FATAL ERROR, there are {} Warnings. "
+    print("\n\n\033[33mThough the implementation does NOT have FATAL ERROR, there is (are) {} Warning(s). "
           "Running through the autograder does NOT mean your implementation is correct since there are Warnings."
-          "You should debug on your implementation to solve all Warnings. File Ledger.txt is exported in the working directory to help you debug.\033[0;;m \n\n")
+          "You should debug on your implementation to solve all Warnings. File Ledger.txt is exported in the working directory to help you debug.\033[0;;m \n\n".format(WARNING_Count))
