@@ -39,14 +39,37 @@ except Exception as e:
                   "Detailed Exception Showed Above.")
     raise e
 
-balance = test_Ledger.getBalanceStat()
-if (str(type(balance)) == "<class 'dict'>"):
+try:
+    balance = test_Ledger.getBalanceStat()
+    assert str(type(balance)) == "<class 'dict'>"
     print(PASS + "\033[0;;m Ledger.getBalanceStat() Function returns a dictionary.")
-else:
+except AssertionError:
     WARNING_Count += 1
     print(WARNING + "\033[0;;m Ledger.getBalanceStat() function does NOT return a dictionary, instead, it "
                     "returns an object with type {}. Since we need this function for test cases below, "
                     "the cases below may raise Exceptions due to this. \nAutograder will continue to run.".format(type(balance)))
+except Exception as e:
+    print(FATAL + "\033[0;;m Exception raised when running Ledger.getBalanceStat function.\n"
+                  "Autograder Terminated.")
+    raise e
+
+try:
+    print(INFO + "\033[0;;m Testing Signature & Decryption Process ...", flush=True, end="")
+    msg = Transaction(test_Ledger, 50, (0, 0), (0, 0), RSA_keys["A"][1], isCoinBase=True)
+    signature = signSignature(msg, RSA_keys["A"][1])
+    decrypt_result = decryptSignature(signature, RSA_keys["A"][0])
+    assert decrypt_result == msg.getTxn()
+    print("\r"+PASS+"\033[0;;m signSignature & decryptSignature functions are working as expected.")
+except AssertionError:
+    WARNING_Count += 1
+    print("\r"+WARNING+"\033[0;;m Result of Signature decryption doesn't match the original message's hash.\n"
+                       "Incorrect implementation of Signature function may cause problems in test cases below.\n"
+                       "Autograder will continue to run.")
+except Exception as e:
+    print("\r" + FATAL + "\033[0;;m Unexpected Exception is raised when signSignature & decryptSignature is called.\n"
+                         "Autograder Terminated")
+    raise e
+
 
 #####################################################
 
@@ -92,7 +115,6 @@ try:
     # B -- 20 --> D
     newTransaction = Transaction(test_Ledger, 20, RSA_keys["B"][1], RSA_keys["B"][0], RSA_keys["D"][1])
     test_Ledger.addTransaction(newTransaction)
-    test_Ledger.exportFile()
 
     assert len(set(test_Ledger.getBalanceStat().values()) - {40, 60, 30, 70, 50}) == 0
     print("\r"+PASS + "\033[0;;m Basic Transaction between Peoples are processed correctly.")
@@ -199,6 +221,7 @@ except Exception as e:
     raise e
 
 ######################################################
+
 print("\n--------- Autograder Terminated -----------")
 
 if WARNING_Count == 0:
