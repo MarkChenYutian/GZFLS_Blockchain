@@ -25,7 +25,7 @@ class Transaction:
         =================================================================================
         |   isCoinBase  |       inTransaction         |       outTransaction            |
         |---------------+-----------------------------+---------------------------------|
-        |               |  Txn  |  index  | Signature | Amount | ReciverPubKey | isUsed |
+        |               |  Txn  |  index  | Signature | Amount | ReceiverPubKey| isUsed |
         |               |-------+---------+-----------+--------+---------------+--------|
         |     False     |1233456|    0    | (tokens)  |   50   |  (pubKey, n)  | False  |
         |               |1233457|    2    | (tokens)  |   50   |  (pubKey, n)  | False  |
@@ -45,47 +45,31 @@ class Transaction:
         self.inTransaction = []
         self.outTransaction = []
         ###################################################################################
-        if isCoinBase:
-            self.addOutputTransaction(amount, receiverPubKey)
-            return
+        """ WRITE YOUR CODE BELOW """
 
-        myBalance = getMyTransaction(allTransaction, myPubKey)
 
-        ###### Create a Transaction Object with appropriate in Tx and out Tx property ######
-        curr_in = 0
-
-        for Txn, index in myBalance:
-            curr_in += allTransaction[Txn].outTransaction[index][0]
-            self.addInputTransaction(Txn, index, signSignature(allTransaction[Txn], myPrivateKey))
-            if curr_in == amount:
-                self.addOutputTransaction(amount, receiverPubKey)
-                break
-            elif curr_in > amount:
-                self.addOutputTransaction(amount, receiverPubKey)
-                self.addOutputTransaction(curr_in - amount, myPubKey)
-                break
-
-        #####################################################################################
 
     def addInputTransaction(self, txn, index, Signature):
         """
         You can use this function to add an entry into the Transaction Object's inTransaction property
         """
-        self.inTransaction.append((txn, index, Signature))
+        """ WRITE YOUR CODE BELOW """
+        pass
     
     def addOutputTransaction(self, amount, reciverPubKey):
         """
         You can use this function to add an entry into the Transaction Object's outTransaction property
         """
-        self.outTransaction.append([amount, reciverPubKey, False])
+        """ WRITE YOUR CODE BELOW """
+        pass
     
     def getTxn(self):
         """
-        Return a positive integer that represents the Unique ID (Txn) of current Transaction.
+        Return a positive integer that represents the Unique Transaction ID (Txn) of current Transaction.
         """
         return hash(self)
 
-    ############ You Needn't Read / Modify the Functions in this class Below #############
+    ############ You Needn't Read & SHOULD NOT Modify the Functions in this class Below #############
 
     def __hash__(self):
         return abs(hash(self.tx_time) + hash(tuple(self.inTransaction)) + self.randID)
@@ -110,20 +94,31 @@ class Transaction:
     def __repr__(self):
         return str(self)
     
-    ######################################################################################
+    #################################################################################################
 
 
 # Auxilary Function that used to create a transaction
 def getMyTransaction(allTransaction, pubKey):
-    MyTransactions = []
-    for Txn in allTransaction:
-        for index in range(len(allTransaction[Txn].outTransaction)):
-            outTx = allTransaction[Txn].outTransaction[index]
-            if outTx[1] == pubKey and (not outTx[2]): MyTransactions.append((Txn, index))
-    return MyTransactions   # My Transaction is a list with structure (Txn, index)
+    """
+    :params:
+    allTransaction - a Ledger object that store all the accepted valid transactions
+    pubKey - the publicKey of receiver.
+    :returns:
+    A list of Transaction ID and Index that points to a specific entry in the .outTransactions of
+    one transaction in Ledger.
+    """
+    """ WRITE YOUR CODE BELOW """
+    pass
 
 def signSignature(transaction, privateKey: tuple):
     """
     Sign the signature on given Transaction, the privateKey is a tuple (privateKey: int, N: int)
+    :params:
+    transaction - a Transaction Object
+    privateKey - a tuple of (PrivateKey, N)
+    :returns:
+    Signature of **hash of input transaction** with the given private key.
     """
-    return tuple(encryptObject(hash(transaction), privateKey[0], privateKey[1]))
+    """ WRITE YOUR CODE BELOW """
+    pass
+

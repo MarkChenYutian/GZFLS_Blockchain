@@ -2,51 +2,79 @@
 Ledger class for GZFLS_Blockchain Project, store all the Transactions and validate each input Transaction automatically.
 """
 from RSA_func import decryptObject
-import warnings
+from Transaction_exceptions import *
 
 class Ledger(dict):
     def __init__(self):
-        super().__init__()
+        super().__init__(self)
     
     def addTransaction(self, Transaction):
+        """
+        :param: Transaction - a transaction object that needs to be added into the Ledger
+        :return: None
+
+        In this function, you should check whether the input function is valid. If not, raise corresponding exceptions
+        as described in part 1.3.1 of project requirement.
+        """
         try:
             self.checkRecursiveTx(Transaction)
-            self.checkInSig(Transaction)
+            self.checkIsUnused(Transaction)
             for Txn, index, signature in Transaction.inTransaction:
                 self[Txn].outTransaction[index][2] = True
             super().update({hash(Transaction): Transaction})
         except Exception as e:
             raise e
+
                 
     def checkIsBalance(self, Transaction):
+        """
+        :param: Transaction - a transaction object that needs to be added into the Ledger
+        :return: None
+
+        In this function, you should check whether the input transaction is balance on Input Amount and Output Amount. If
+        the transaction is not balanced, raise TransactionNotBalanceError(). If it is balanced, return None
+        """
         outputAmount, inputAmount = 0, 0
 
         for index in range(len(Transaction.inTransaction)):
             in_txn, in_index, signature = Transaction.inTransaction[index]
-            inputAmount += self[in_txn].outTransaction[in_index][0]
-        
+            try:
+                inputAmount += self[in_txn].outTransaction[in_index][0]
+            except KeyError:
+                raise TransactionInNotExist()
+
         for index in range(len(Transaction.outTransaction)):
             outputAmount += Transaction.outTransaction[index][0]
-        
+
         if inputAmount != outputAmount: raise TranactionNotBalanceError()
         return
     
     def checkIsUnused(self, Transaction):
+        """
+        :param: Transaction - a transaction object that needs to be added into the Ledger
+        :return: None
+
+        In this function, you should check whether each entry that .inTransaction points to is unUsed. If any of
+        the entry is already used, raise TransactionDoubleSpendError.
+        """
         for index in range(len(Transaction.inTransaction)):
             in_txn, in_index, signature = Transaction.inTransaction[index]
             prev_tx = self[in_txn].outTransaction[in_index]
-            if prev_tx[2]: return False # if any one of in_tx is already used before, the whole transaction is invalid
-        return True
+            if prev_tx[2]: raise TransactionDoubleSpendError() # if any one of in_tx is already used before, the whole transaction is invalid
     
     def checkRecursiveTx(self, Transaction):
+        """
+        :param: Transaction - a transaction object that needs to be added into the Ledger
+        :return: None
+        """
         if isCoinBase(Transaction): return True
 
         self.checkIsBalance(Transaction)
         self.checkInSig(Transaction)
         isValid = True
         for index in range(len(Transaction.inTransaction)):
-            in_txn, in_index, signature = Transaction.inTransaction[index]
-            if in_txn not in self: raise TransactionInNotExist()   # Transaction not in ledger
+            in_txn,in_index,signature = Transaction.inTransaction [index]
+            if in_txn not in self: raise TransactionInNotExist()  # Transaction not in ledger
             isValid = isValid and self.checkRecursiveTx(self[in_txn])
         return isValid
     
@@ -56,10 +84,9 @@ class Ledger(dict):
         for txn in self.keys():
             for index in range(len(self[txn].outTransaction)):
                 amount, pubkey, isUsed = self[txn].outTransaction[index]
-                if not isUsed:
-                    if pubkey in balance: balance[pubkey] += amount
-                    else: balance[pubkey] = amount
-        
+                if pubkey not in balance: balance[pubkey] = 0
+                if not isUsed: balance[pubkey] += amount
+
         return balance
     
     def checkInSig(self, currTransaction):
@@ -69,7 +96,10 @@ class Ledger(dict):
 
             prev_pubKey = prev_tx.outTransaction[in_index][1]
             prev_sig = currTransaction.inTransaction[index][2]
-            sig_result = decryptSignature(prev_sig, prev_pubKey, currTransaction.myN)
+            try:
+                sig_result = decryptSignature(prev_sig, prev_pubKey)
+            except:
+                raise TransactionSignatureError()
 
             if sig_result != hash(prev_tx): raise TransactionSignatureError()
         return True
@@ -94,29 +124,8 @@ class Ledger(dict):
 def isCoinBase(transaction):
     return transaction.isCoinBase
 
-def decryptSignature(signature, pubKey, n):
-    return decryptObject(signature, pubKey, n)
-
-################################ You Needn't Read the Stuffs Below #################################
-class TranactionNotBalanceError(Exception):
-    def __init__(self, message="The Transaction is not Balanced, check the init function in Transaction Class."):
-        self.message = message
-        super().__init__(self.message)
-
-class TransactionDoubleSpendError(Exception):
-    def __init__(self, message="At least one of the input in given transaction is already used, transaction is not recorded by Ledger."):
-        self.message = message
-        super().__init__(self.message)
-
-class TransactionInNotExist(Exception):
-    def __init__(self, message="At least one of the input of given Transaction is not recorded in the Ledger, transaction is not recorded by Ledger."):
-        self.message = message
-        super().__init__(self.message)
-
-class TransactionSignatureError(Exception):
-    def __init__(self, message="Signature in the given inTransaction fail to Pass the Signature Pass."):
-        self.message = message
-        super().__init__(self.message)
+def decryptSignature(signature, pubKey: tuple):
+    return decryptObject(signature, pubKey[0], pubKey[1])
 
 if __name__ == "__main__":
     A = Ledger()
