@@ -1,0 +1,11 @@
+##################################
+# This is an Test OP_Code Script #
+##################################
+OP_ADD
+# OP_PRINT
+OP_SHA256
+32501742
+OP_SHA256
+# OP_PRINT
+OP_EQUAL
+OP_VERIFY

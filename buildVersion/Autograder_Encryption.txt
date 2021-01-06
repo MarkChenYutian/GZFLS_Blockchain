@@ -1,0 +1,7 @@
+import base64
+f = open('AutoGrader.py')
+encoded = base64.b64encode(f.read().encode("ascii"))
+print(encoded)
+
+code = base64.b64decode(Secret).decode("ascii")
+eval(compile(code,'<string>','exec'))
