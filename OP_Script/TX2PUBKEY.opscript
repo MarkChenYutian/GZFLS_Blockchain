@@ -1,11 +1,24 @@
 ##################################
 # This is an Test OP_Code Script #
 ##################################
+#      Written by Mark           #
+##################################
+#     Script.run(a, b, c)
+#      a + b == c ? --- n ---> Fail
+#           |
+#           y
+#           |
+#        Success
+#
+#
+OP_IN 0
+OP_IN 1
 OP_ADD
-# OP_PRINT
-OP_SHA256
-32501742
-OP_SHA256
-# OP_PRINT
+OP_IN 2
 OP_EQUAL
+OP_JUMP_IF0 22
+1
+0
+OP_JUMP_IF0 23
+0
 OP_VERIFY
