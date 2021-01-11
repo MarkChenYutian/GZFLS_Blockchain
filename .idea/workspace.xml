@@ -2,10 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="84f70424-e62f-401f-8c8a-dff0a231faee" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.vscode/settings.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Autograder/AutoGrader.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Autograder/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Autograder/test/0.test" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OP_Script/OP_Script.py" beforeDir="false" afterPath="$PROJECT_DIR$/OP_Script/OP_Script.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/OP_Script/TX2PUBKEY.opscript" beforeDir="false" afterPath="$PROJECT_DIR$/OP_Script/TX2PUBKEY.opscript" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,7 +32,7 @@
     <property name="node.js.path.for.package.eslint" value="project" />
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.OP_Script">
     <configuration name="OP_Engine" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="GZFLS_Blockchain" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -55,8 +55,31 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="OP_Script" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="GZFLS_Blockchain" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/OP_Script" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/OP_Script/OP_Script.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.OP_Script" />
         <item itemvalue="Python.OP_Engine" />
       </list>
     </recent_temporary>
@@ -72,6 +95,7 @@
       <workItem from="1607670694615" duration="72000" />
       <workItem from="1609920519088" duration="359000" />
       <workItem from="1609989845350" duration="213000" />
+      <workItem from="1610210971983" duration="992000" />
     </task>
     <servers />
   </component>
@@ -82,24 +106,30 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1869" height="268" key="GridCell.Tab.0.bottom" timestamp="1609920880677">
+    <state width="1869" height="268" key="GridCell.Tab.0.bottom" timestamp="1610211589790">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
+    <state width="1869" height="268" key="GridCell.Tab.0.bottom/0.0.1920.1040/-1920.0.1920.1040@0.0.1920.1040" timestamp="1610211589790" />
     <state width="1869" height="268" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1609920880677" />
-    <state width="1869" height="268" key="GridCell.Tab.0.center" timestamp="1609920880677">
+    <state width="1869" height="268" key="GridCell.Tab.0.center" timestamp="1610211589790">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
+    <state width="1869" height="268" key="GridCell.Tab.0.center/0.0.1920.1040/-1920.0.1920.1040@0.0.1920.1040" timestamp="1610211589790" />
     <state width="1869" height="268" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1609920880677" />
-    <state width="1869" height="268" key="GridCell.Tab.0.left" timestamp="1609920880677">
+    <state width="1869" height="268" key="GridCell.Tab.0.left" timestamp="1610211589790">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
+    <state width="1869" height="268" key="GridCell.Tab.0.left/0.0.1920.1040/-1920.0.1920.1040@0.0.1920.1040" timestamp="1610211589790" />
     <state width="1869" height="268" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1609920880677" />
-    <state width="1869" height="268" key="GridCell.Tab.0.right" timestamp="1609920880677">
+    <state width="1869" height="268" key="GridCell.Tab.0.right" timestamp="1610211589790">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
+    <state width="1869" height="268" key="GridCell.Tab.0.right/0.0.1920.1040/-1920.0.1920.1040@0.0.1920.1040" timestamp="1610211589790" />
     <state width="1869" height="268" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1609920880677" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/AutoGrader_py$OP_Script.coverage" NAME="OP_Script Coverage Results" MODIFIED="1610211589781" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/OP_Script" />
+    <SUITE FILE_PATH="coverage/AutoGrader_py$OP_Engine.coverage" NAME="OP_Engine Coverage Results" MODIFIED="1610211187678" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/OP_Script" />
     <SUITE FILE_PATH="coverage/GZFLS_Blockchain$OP_Engine.coverage" NAME="OP_Engine Coverage Results" MODIFIED="1609920553696" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/OP_Script" />
   </component>
 </project>

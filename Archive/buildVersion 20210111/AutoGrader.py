@@ -10,7 +10,7 @@ import util
 from Transaction import *
 from Ledger import *
 from Block import *
-from RSA_func import generateMyKeys
+from RSA.RSA_func import generateMyKeys
 from MerkelTree import MerkelTree
 
 class AutoGrader:

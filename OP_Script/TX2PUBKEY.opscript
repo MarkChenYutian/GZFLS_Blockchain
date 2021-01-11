@@ -4,12 +4,12 @@
 #      Written by Mark           #
 ##################################
 #     Script.run(a, b, c)
-#      a + b == c ? --- n ---> Fail
+#           |
+#      a + b == c ? --- n ---> OP_Verify_Fail
 #           |
 #           y
 #           |
-#        Success
-#
+#        Exec Finish
 #
 OP_IN 0
 OP_IN 1

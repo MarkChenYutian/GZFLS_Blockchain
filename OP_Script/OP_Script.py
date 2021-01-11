@@ -4,7 +4,11 @@ I will introduce the grammar of OP Script here.
 There are three types of things in an OP Script File - Command, Value, and Comment.
 * Command always start with "OP"
 * Comment always start with "#"
-* If a line is not command or comment, it will be treated as a value - push in the the stack directly as a string.
+* If a line is not command or comment, it will be treated as a value - we will try to apply eval() on it. If it can be evaluated, the value will be pushed into the stack, or the string will be pushed into the stack.
+    > Example of eval()
+    > eval("(1, 2, 3)") -> (1, 2, 3)
+    > eval("12 + 13") -> 25
+    > eval("test") -> Exception
 
 Note that Empty line is NOT allowed. (Or an empty string will be pushed into the stack.)
 
@@ -123,13 +127,6 @@ class OP_Script:
 
 
 if __name__ == '__main__':
-    # msg = hashlib.sha3_256("testMsg".encode('ascii')).hexdigest()
-    # msg = 4be7dceb544d12d1816034f664a13762bb0d0dd3b4f2c2aed78ef02552ddf17a
-    a = ["testMsg"]
-    msg = OP_Code['OP_SHA256'](a)
-    private, public, n = (142729, 59513, 351073)
-    signature = encryptObject(a[-1], private, n)
-
     test = OP_Script("TX2PUBKEY.opscript")
     # test.run(tuple(signature), (public, n))
     test.run(10, 13, 23)

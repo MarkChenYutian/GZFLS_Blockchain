@@ -1,129 +1,139 @@
 """
-This is a version of transaction written by mark
+Transaction Version 2
+This File contains Transaction class with OP_Script and accept transaction to multiple person.
+
+Transaction class in this version also contains the following structure:
+-------------------------------------------------------------------------
+|       inTransactions      |   outTransactions          |  isCoinBase  |
+|---------------------------+----------------------------+--------------|
+| (Txn, index, parameters)  | (amount, isUsed, OP_Script)|              |
+| (Txn, index, parameters)  | ...                        |     False    |
+|                           |                            |              |
+-------------------------------------------------------------------------
+
+The 'signature' in previous version is replaced by a tuple of parameters.
+
+Since the constructor of Transaction Object is complex, we will use the 'factory mode' here to create Transaction object
+The TransactionFactory class will provide multiple ways to create Transaction object.
 """
-from RSA_func import *
-from random import random
-from Ledger import Ledger
 import time
+import random
+import json
+
+from Transaction_exceptions import *
+from Ledger import *
+
+class TransactionFactory:
+    def __init__(self, myPubKey: tuple, myPrivateKey: tuple):
+        self.myPubKey = myPubKey
+        self.myPrivateKey = myPrivateKey
+
+    def createTransaction(self,
+                          allTransactions: Ledger,
+                          amount: tuple,
+                          OPType: tuple,
+                          OP_Parameters: tuple,
+                          isCoinBase=False,
+                          **kwargs):
+        """
+        Create a Transaction using Parameters
+
+        :param amount: tuple of integer that represent the amount of money transact to different people.
+        :param OPType: tuple of string that is either "2PubKey" or "2PubKeyHash"
+        :param OP_Parameters: tuple of parameters given to setup the OP Script
+        :param isCoinBase: if the Transaction is from coinbase, set as True
+        :param kwargs: remained for future update
+
+        :raise NotEnoughBalanceError(): There are not enough balance in the account to create the transaction
+
+        :return: A Transaction Object
+        """
+        newTransaction = Transaction(isCoinBase=isCoinBase, **kwargs)
+        """ Write Your Code Below """
+        # TODO: Implement Transaction Initialization Here
+
+        return newTransaction   # Do Not modify this line
+
+    def loadSerializedTransaction(self, serializedDict: dict):
+        """
+        Create a Transaction using serialized result (a dictionary).
+
+        :param a dictionary from Transaction.serialize()
+        :return a new Transaction Object
+        """
+        newTransaction = Transaction(isCoinBase=False)
+        newTransaction.load(serializedDict)
+        return newTransaction
+
 
 class Transaction:
-    def __init__(self, allTransaction: Ledger, amount: int, myPubKey: tuple, myPrivateKey: tuple, receiverPubKey: tuple, isCoinBase=False):
+    def __init__(self, isCoinBase=False, **kwargs):
         """
-        :params:
-        allTransaction - the ledger that store all valid transactions
-        amount - the amount of coin you want to transact to others
-        myPubKey - a tuple (myPublicKey, myN)
-        myPrivateKey - a tuple (myPrivateKey, myN)
-        receiverPubKey - a tuple (receiverPublicKey, receiverN)
+        :param isCoinBase: if the Transaction is from coinbase, set as True
+        :param **kwargs: remained for future update
 
-        :returns: None
-
-        Create a new transaction object that has appropriate .inTransaction and .outTransaction proprties.
-        If the transaction is from COINBASE, the .inTransaction can be empty.
-
-        Structure of Transaction Object
-        =================================================================================
-        |   isCoinBase  |       inTransaction         |       outTransaction            |
-        |---------------+-----------------------------+---------------------------------|
-        |               |  Txn  |  index  | Signature | Amount | ReciverPubKey | isUsed |
-        |               |-------+---------+-----------+--------+---------------+--------|
-        |     False     |1233456|    0    | (tokens)  |   50   |  (pubKey, n)  | False  |
-        |               |1233457|    2    | (tokens)  |   50   |  (pubKey, n)  | False  |
-        |               |1233458|    0    | (tokens)  |        |               |        |
-        =================================================================================
-        One tuple in the self.inTransaction represents a tuple in a specific Transaction object's
-        .outTransaction property.
+        :return None
         """
-        #### Properties that is used to form Unique ID (Txn) for one Transaction Object ###
-        # DO NOT MODIFY THESE PROPERTIES
-        self.tx_time = int(time.time() * 10000)
-        self.randID = int(random() * 10000)
-        ###################################################################################
+        # Properties used to Create Txn, Do NOT modify these two lines
+        self.timestamp = int(time.time() * 1e4)
+        self.randNum = int(random.random() * 1e4)
 
-        ############# The Important Properties of a Transaction Object ####################
+        # Basic Property
+        self.version = 2
         self.isCoinBase = isCoinBase
-        self.inTransaction = []
-        self.outTransaction = []
-        ###################################################################################
-        if isCoinBase:
-            self.addOutputTransaction(amount, receiverPubKey)
-            return
 
-        myBalance = getMyTransaction(allTransaction, myPubKey)
+        # Core Property
+        self.kwargs = kwargs
+        self.inTransactions = []
+        self.outTransactions = []
 
-        ###### Create a Transaction Object with appropriate in Tx and out Tx property ######
-        curr_in = 0
-
-        for Txn, index in myBalance:
-            curr_in += allTransaction[Txn].outTransaction[index][0]
-            self.addInputTransaction(Txn, index, signSignature(allTransaction[Txn], myPrivateKey))
-            if curr_in == amount:
-                self.addOutputTransaction(amount, receiverPubKey)
-                break
-            elif curr_in > amount:
-                self.addOutputTransaction(amount, receiverPubKey)
-                self.addOutputTransaction(curr_in - amount, myPubKey)
-                break
-
-        #####################################################################################
-
-    def addInputTransaction(self, txn, index, Signature):
-        """
-        You can use this function to add an entry into the Transaction Object's inTransaction property
-        """
-        self.inTransaction.append((txn, index, Signature))
-    
-    def addOutputTransaction(self, amount, reciverPubKey):
-        """
-        You can use this function to add an entry into the Transaction Object's outTransaction property
-        """
-        self.outTransaction.append([amount, reciverPubKey, False])
-    
     def getTxn(self):
         """
-        Return a positive integer that represents the Unique ID (Txn) of current Transaction.
+        Do Not Modify this Method
+        This Method creates a unique ID (UID) for each Transaction Object.
+        :return: an integer that represent the Transaction Number of current Transaction Object
         """
-        return hash(self)
+        return int(str(self.timestamp) + str(self.randNum))
 
-    ############ You Needn't Read / Modify the Functions in this class Below #############
+    def serialize(self):
+        """
+        Do Not Modify this Method
+        This method 'serialize' a Transaction Object into a string. In this way, we can calculate the hash and
+        deliver it on the internet.
+        :return: a string that contains vital information of Transaction Object.
+        """
+        result = dict()
+        result['type'] = "Transaction"
+        result['timestamp'] = self.timestamp
+        result['randNum'] = self.randNum
+        result['version'] = self.version
+        result['isCoinBase'] = self.isCoinBase
+        result['kwargs'] = self.kwargs
+        result['inTransactions'] = self.inTransactions
+        result['outTransactions'] = self.outTransactions
+        return json.dumps(result)
 
-    def __hash__(self):
-        return abs(hash(self.tx_time) + hash(tuple(self.inTransaction)) + self.randID)
-    
-    def __str__(self):
-        result = "============ Transaction ===============\n"\
-        "| Txn: {} \n".format(self.getTxn())
-        if self.isCoinBase:
-            result += "| THIS TRANSACTION IS FROM COINBASE \n"
-        else:
-            result += "| In Transactions:\n"\
-            "| Txn | Index | Signature |\n"
-            for inTx in self.inTransaction:
-                result += "| {} | {} | {}\n".format(inTx[0], inTx[1], inTx[2])
-        result += "| Out Transactions:\n"\
-            "| Amount | reciver PubKey | isUsed\n"
-        for outTx in self.outTransaction:
-            result += "| {} | {} | {}\n".format(outTx[0], outTx[1], outTx[2])
-        result += "========================================"
-        return result
-    
-    def __repr__(self):
-        return str(self)
-    
-    ######################################################################################
+    def load(self, serialized_Res: dict):
+        """
+        Do Not Modify this Method
+        This method 'load' a dictionary that contains all the properties of transaction object to the current object.
+        :param serialized_Res: a dictionary that comes from self.serialized()'s decoding result
+        :return: None
+        :raises: AssertionError
+        """
+        assert serialized_Res['type'] == "Transaction", \
+            "Transaction object can only load from the serialized result of Transaction"
+        self.timestamp = serialized_Res['timestamp']
+        self.randNum = serialized_Res['randNum']
+        self.version = serialized_Res['version']
+        self.isCoinBase = serialized_Res['isCoinBase']
+        self.kwargs = serialized_Res['kwargs']
+        self.inTransactions = serialized_Res['inTransactions']
+        self.outTransactions = serialized_Res['outTransactions']
 
-
-# Auxilary Function that used to create a transaction
-def getMyTransaction(allTransaction, pubKey):
-    MyTransactions = []
-    for Txn in allTransaction:
-        for index in range(len(allTransaction[Txn].outTransaction)):
-            outTx = allTransaction[Txn].outTransaction[index]
-            if outTx[1] == pubKey and (not outTx[2]): MyTransactions.append((Txn, index))
-    return MyTransactions   # My Transaction is a list with structure (Txn, index)
-
-def signSignature(transaction, privateKey: tuple):
-    """
-    Sign the signature on given Transaction, the privateKey is a tuple (privateKey: int, N: int)
-    """
-    return tuple(encryptObject(hash(transaction), privateKey[0], privateKey[1]))
+if __name__ == "__main__":
+    testLedger = Ledger()
+    TransactionAgent = TransactionFactory((1109, 2003), (424, 2003))
+    newTx = TransactionAgent.createTransaction(testLedger, tuple([10]), (), (), isCoinBase=True)
+    testLedger.addTransaction(newTx)
+    print(testLedger.items())

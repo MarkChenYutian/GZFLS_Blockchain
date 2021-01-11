@@ -1,6 +1,6 @@
 import pickle
 
-from RSA_util import getRandomBigPrime, calcPhi
+from RSA.RSA_util import getRandomBigPrime, calcPhi
 
 # In this file, you will write the implementation of RSA_Client class. For the Autograder to run properly,
 # DO NOT MODIFY the given function signature and class name.
