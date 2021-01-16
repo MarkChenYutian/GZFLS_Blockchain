@@ -2,7 +2,7 @@
 /shelf/
 /workspace.xml
 # Datasource local storage ignored files
-/../../../../:\GZFLS_Blockchain\OP_Script\.idea/dataSources/
+/../../../../:\GZFLS_Blockchain\test\.idea/dataSources/
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/

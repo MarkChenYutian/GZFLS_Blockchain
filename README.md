@@ -7,18 +7,13 @@ commit from Mark Chen
 
 commit from Mark's branch - Mark, test pull request
 
-```mermaid
-graph LR;
-subgraph Client
-	web(class WebAgent)
-	subgraph BlockChain
-		b1(Block)
-		b2(Block)
-		b1 --> b2
-	end
-	ledger(class Ledger)
-end
-```
+
+
+`product` store the previous version of project.
+
+`buildVersion` is the current version of project we are working on
+
+`test` will have some fancy implementation that we may add into project in the future.
 
 
 
