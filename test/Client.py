@@ -6,9 +6,11 @@ A client class will contain the offline parts of Blockchain Project
 import multiprocessing
 import json
 import time
+import datetime
 
 from RSA.RSA_func import generateMyKeys, encryptString, decryptString
 from Transaction import TransactionFactory
+from OP_Script.OP_Factory import OP_Factory
 
 from Miner import minerProcess
 from Worker import workerProcess
@@ -111,6 +113,8 @@ class Client:
 
         WebAgent and TerminalAgent are in different process, so they will not clog each other's work.
         """
+        print("GZFLS Blockchian Client Start @ {}".format(datetime.datetime.now()))
+        print("Initializing Client")
 
         # Core Property of Client Class - Task Queue
         self.taskQueue = multiprocessing.Queue()
@@ -134,50 +138,38 @@ class Client:
 
         # Factories and Helper Agents in Client
         # Transaction Factory create Transaction Object from various ways
-        self.TxFactory = TransactionFactory(self.publicKey, self._privateKey)
+        myOPFactory = OP_Factory()
+        self.TxFactory = TransactionFactory(self.publicKey, self._privateKey, myOPFactory)
         # TODO: we may need a BlockFactory / LedgerManager here.
 
         # start distributor process
+        print("Task Distribution Process Start")
         self.taskDistributor.start()
+
         # start miner process
-        self.startMiner()
+        try:
+            self.startMiner()
+            print("Miner Process Start")
+        except:
+            print("Miner Start Fail")
+
         # start worker process
-        self.startWorker()
+        try:
+            self.startWorker()
+            print("Worker Process Start")
+        except:
+            print("Worker Start Fail")
 
-        # Handel the stdin below
-        while True:
-            terminalTask = input().split(" ")
-            try:
-                # Emergency Stop
-                if terminalTask[0] == "STOP":
-                    print("\033[1;31mClient Stop Forcely. Terminating worker process.\033[0;;m")
-                    self.taskDistributor.terminate()
-                    self.miner.terminate()
-                    break
+        # Handle Terminal
+        print("Terminal Agent Start\n--------------------")
+        self.terminalAgent()
 
-                # Start Miner
-                if terminalTask [1] == 'start':
-                    if terminalTask [0] == 'miner': self.startMiner()
-                    elif terminalTask[0] == 'worker': self.startWorker()
-                    continue
 
-                # Parse terminal task
-                taskStat = taskRegister(self.taskQueue, terminalTask[0], terminalTask[1], *terminalTask[2:])
-
-                # Normal Stop
-                if terminalTask[1] == 'stop' and terminalTask[0].lower() == 'distributor':  break
-
-                # Register Fail
-                elif not taskStat: print("\033[1;33mTask Register Fail\033[0;;m")
-            except IndexError:
-                print("\033[1;33mTask Register Fail, at least two parameters makes up a valid task\033[0;;m")
-        print("\033[1;31mTerminal Agent Exit.\033[0;;m")
 
     def startMiner(self):
         if self.miner is None or not self.miner.is_alive():
             self.miner = multiprocessing.Process(target=minerProcess,args=(self.minerQueue,self.taskQueue,taskRegister))
             self.miner.start()
-            taskRegister(self.taskQueue, 'miner', 'PASS')
         else:
             print("\033[1;33mMiner already start.\033[0;;m")
 
@@ -185,9 +177,90 @@ class Client:
         if self.worker is None or not self.worker.is_alive():
             self.worker = multiprocessing.Process(target=workerProcess, args=(self.workerQueue, self.taskQueue, taskRegister))
             self.worker.start()
-            taskRegister(self.taskQueue, 'worker', 'PASS')
         else:
-            print("\033[1;Worker already start.\033[0;;m")
+            print("\033[1;33mWorker already start.\033[0;;m")
+
+    def statProcess(self, printOut=False):
+        status = dict()
+        status ['miner'] = []
+        status ['worker'] = []
+        status ['distributor'] = []
+        # Miner Status
+        status['miner'].append(self.miner is not None and self.miner.is_alive())
+        status['miner'].append(self.minerQueue.qsize())
+        # Worker Status
+        status['worker'].append(self.worker is not None and self.worker.is_alive())
+        status['worker'].append(self.workerQueue.qsize())
+        # Distributor Status
+        status['distributor'].append(self.taskDistributor is not None and self.taskDistributor.is_alive())
+        status['distributor'].append(self.taskQueue.qsize())
+
+        if printOut:
+            # Distributor Status
+            print("Process 0: Distributor",end="")
+            if status ['distributor'] [0]:
+                print(" \033[1;32m[  OK  ]\033[0;;m" + "  Task Queue |" + "*" * status ['distributor'] [1])
+            else:
+                print(" \033[1;31m[ DEAD ]\033[0;;m" + "  Task Queue |" + "*" * status ['distributor'] [1])
+
+            # Worker Status
+            print("Process 1: Worker     ",end="")
+            if status ['worker'] [0]:
+                print(" \033[1;32m[  OK  ]\033[0;;m" + "  Task Queue |" + "*" * status ['worker'] [1])
+            else:
+                print(" \033[1;31m[ DEAD ]\033[0;;m" + "  Task Queue |" + "*" * status ['worker'] [1])
+
+            # Miner Status
+            print("Process 2: Miner      ",end="")
+            if status ['miner'] [0]:
+                print(" \033[1;32m[  OK  ]\033[0;;m" + "  Task Queue |" + "*" * status ['miner'] [1])
+            else:
+                print(" \033[1;31m[ DEAD ]\033[0;;m" + "  Task Queue |" + "*" * status ['miner'] [1])
+
+        return status
+
+    def terminalAgent(self):
+        # Handel the stdin below
+        while True:
+            terminalTask = input().split(" ")
+
+            # Emergency Stop
+            if terminalTask [0] == "STOP":
+                print("\033[1;31mClient Stop Forcely. Terminating worker process.\033[0;;m")
+                self.taskDistributor.terminate()
+                self.miner.terminate()
+                break
+
+            # print client status
+            if terminalTask [0] == "stat":
+                self.statProcess(printOut=True)
+                continue
+
+
+            # Start Miner
+            if terminalTask [1] == 'start':
+                if terminalTask [0] == 'miner':
+                    self.startMiner()
+                elif terminalTask [0] == 'worker':
+                    self.startWorker()
+                continue
+
+            try:
+                # Parse terminal task
+                taskStat = taskRegister(self.taskQueue,terminalTask [0],terminalTask [1],*terminalTask [2:])
+
+                # Normal Stop
+                if terminalTask [1] == 'stop' and terminalTask [0].lower() == 'distributor':
+                    break
+
+                # Register Fail
+                elif not taskStat:
+                    print("\033[1;33mTask Register Fail\033[0;;m")
+
+            except IndexError:
+                print("\033[1;33mTask Register Fail, at least two parameters makes up a valid task\033[0;;m")
+
+        print("\033[1;31mTerminal Agent Exit.\033[0;;m")
 
 
 if __name__ == "__main__":

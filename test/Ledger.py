@@ -14,14 +14,13 @@ If it is not, raise corresponding exceptions
 import json
 
 from util.ShelveManager import ShelveManager
-from Transaction_exceptions import *
+from util.Serialize import Serializable
 
-
-class Ledger():
+class Ledger(Serializable):
     def __init__(self, storePath="./storage/Ledger.db", doClearInit=False):
         self.storePath = storePath
-        self.io_msg = ShelveManager(self.storePath)
-        if doClearInit: self.io_msg.wipeData(silent=True)
+        self.shelveManager = ShelveManager(self.storePath)
+        if doClearInit: self.clear(silent=True)
 
     def addTransaction(self, newTransaction):
         """
@@ -35,26 +34,34 @@ class Ledger():
         # TODO: Improve the implementation here to check the transaction
         self.set(newTransaction.getTxn(), newTransaction.serialize())
 
-    def get(self, item):
+    def get(self,key):
         """
-        :param item: key of dicitonary
-        :return: serialized key
+        :param key: key of dictionary
+        :return: value that is paired with the key
         """
-        return self.io_msg.read(item)
+        return self.shelveManager.read(key)
 
-    def set(self, key, item):
-        self.io_msg.write(key, item)
+    def set(self, key: str, item: str):
+        """
+        :param key: String, key of a pair in dictionary
+        :param item: String, value of a pair in dictionary
+        :return:
+        """
+        self.shelveManager.write(key,item)
 
     def getAllItems(self):
         """
         :return: A list of (key, item) in the Ledger
         """
-        return self.io_msg.getAll()
+        return self.shelveManager.getAll()
 
     def getMyTransactions(self, myPubKeyHash):
+        """
+        :param myPubKeyHash: SHA3_256 of My Public Key
+        :return: A list of Transaction ID & Index. That represent usable UTXO.
+        """
         myTransactions = []
         allPairs = self.getAllItems()
-        pass
         for txn, item in allPairs:
             try:
                 transaction_dict = json.loads(item)
@@ -63,9 +70,35 @@ class Ledger():
                     if op_type == 'tx2pbh' and not isUsed and pubKeyHash == myPubKeyHash:
                         myTransactions.append((txn, _))
             except Exception as e:
-                raise e
                 print("Warning: JSON can't load the object stored in Ledger. Ledger may be damaged")
+                print(e)
         return myTransactions
+
+    def serialize(self):
+        """
+        Implement Serialize Method in Serializable Abstract Class
+
+        :return: JSON String of Ledger Object
+        """
+        ledgerDict = dict()
+        ledgerDict['type'] = "Ledger"
+        ledgerDict['data'] = self.getAllItems()
+        return json.dumps(ledgerDict, indent=4)
+
+    def load(self, serialize):
+        """
+        Implement load Method in Serializable Abstract Class
+
+        Load serialize dictionary to create a new object.
+        """
+        assert serialize['type'] == "Ledger", "Ledger can only load from serialized string with Type Ledger"
+        print("Original Ledger is cleared to load new Ledger.")
+        self.clear(silent=False)
+        for key, item in serialize['data']:
+            self.set(key, item)
+
+    def clear(self, silent=False):
+        self.shelveManager.wipeData(silent=silent)
 
     def __str__(self):
         str_result = ""
@@ -76,11 +109,3 @@ class Ledger():
             str_result += "\n"
             counter += 1
         return str_result
-
-
-
-if __name__ == "__main__":
-    test = Ledger()
-    test.set("1", "test")
-    test.set("2", "test2")
-    print(test.get("2"))

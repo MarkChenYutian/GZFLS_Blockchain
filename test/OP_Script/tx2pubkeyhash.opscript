@@ -1,0 +1,20 @@
+# This is a OP_script template file for Transaction to public key hash
+# The `OP_TEMPLATE 0` instruction means that when OP Factory is creating an op script using this template, it will use
+# the 0th parameter in *args to fill this line. The parameter can be either instruction or constant (or comment).
+#
+# templateParameter 0: Public Key Hash  | templateParameter1: Txn
+# InputParameter 0: Public Key          | InputParameter 1: Signature
+# Write your template file below:
+#
+OP_IN 0
+OP_SHA256
+OP_TEMPLATE 0
+OP_EQUAL
+OP_VERIFY
+# code above is checking whether public key hash equal to specific value
+OP_IN 1
+OP_IN 0
+OP_TEMPLATE 1
+OP_CHECKSIG
+OP_VERIFY
+# code above is checking whether signature is valid

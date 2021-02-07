@@ -3,7 +3,7 @@ Author: Mark Chen
 Date: 2021/1/11
 Description:
 The ShelveManager class is used to control the storage of data by module 'shelve'.
-A ShelveManager is used to read & write data.
+A ShelveManager is used to read & write data from shelve
 """
 import shelve
 

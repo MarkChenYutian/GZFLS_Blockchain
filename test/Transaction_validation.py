@@ -1,7 +1,6 @@
 """
 This file contains several functions that are used to validate the Transaction Object
 """
-from Transaction_exceptions import *
 
 
 def checkIsBalanced(newTransaction):

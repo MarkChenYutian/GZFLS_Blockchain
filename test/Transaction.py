@@ -3,13 +3,13 @@ Transaction Version 2
 This File contains Transaction class with OP_Script and accept transaction to multiple person.
 
 Transaction class in this version also contains the following structure:
--------------------------------------------------------------------------------------
-|       inTransactions      |   outTransactions                      |  isCoinBase  |
-|---------------------------+----------------------------------------+--------------|
-| (Txn, index, parameters)  | (amount, isUsed, OP_Script, pubKeyHash)|              |
-| (Txn, index, parameters)  | ...                                    |     False    |
-|                           |                                        |              |
--------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+|       inTransactions      |   outTransactions                               |  isCoinBase  |
+|---------------------------+-------------------------------------------------+--------------|
+| (Txn, index, parameters)  | (amount, isUsed, OP_Script, pubKeyHash, OP_Type)|              |
+| (Txn, index, parameters)  | ...                                             |     False    |
+|                           |                                                 |              |
+----------------------------------------------------------------------------------------------
 
 The 'signature' in previous version is replaced by a tuple of parameters.
 
@@ -18,12 +18,12 @@ The TransactionFactory class will provide multiple ways to create Transaction ob
 """
 import time
 import random
-import json
 import hashlib
 
-from Transaction_exceptions import *
+from util.Transaction_exceptions import *
 from Ledger import *
-from RSA.RSA_func import encryptString, decryptString
+from RSA.RSA_func import encryptString
+from util.Serialize import Serializable
 
 class TransactionFactory:
     def __init__(self, myPubKey: tuple, myPrivateKey: tuple, OP_Factory):
@@ -84,7 +84,7 @@ class TransactionFactory:
                     newTransaction.outTransactions.append((amount[index], False, newOP_Script, receiver_pubKeyHash[index], 'tx2pbh'))
                 if totalOut > sum(amount):
                     # give charge to transaction initiator
-                    newOP_Script = self.OP_Factory.create('tx2pbh', self.myPubKeyHash[index], newTransaction.getTxn())
+                    newOP_Script = self.OP_Factory.create('tx2pbh', self.myPubKeyHash, newTransaction.getTxn())
                     newTransaction.outTransactions.append((totalOut - sum(amount), False, newOP_Script, self.myPubKeyHash, 'tx2pbh'))
 
         if totalOut < sum(amount): raise NotEnoughBalanceError()   # Transaction Initiator does not have enough Balance
@@ -103,7 +103,7 @@ class TransactionFactory:
         return newTransaction
 
 
-class Transaction:
+class Transaction(Serializable):
     def __init__(self, isCoinBase=False, **kwargs):
         """
         :param isCoinBase: if the Transaction is from coinbase, set as True
@@ -130,7 +130,7 @@ class Transaction:
         This Method creates a unique ID (UID) for each Transaction Object.
         :return: an integer that represent the Transaction Number of current Transaction Object
         """
-        return hashlib.sha3_256(str(self.timestamp * self.randNum).encode('ascii')).hexdigest()
+        return hashlib.sha3_256((str(self.timestamp * self.randNum) + str(self.outTransactions)).encode('ascii')).hexdigest()
 
     def serialize(self):
         """
@@ -148,7 +148,7 @@ class Transaction:
         result['kwargs'] = self.kwargs
         result['inTransactions'] = self.inTransactions
         result['outTransactions'] = self.outTransactions
-        return json.dumps(result)
+        return json.dumps(result, indent=4)
 
     def load(self, serialized_Res: dict):
         """
@@ -169,25 +169,7 @@ class Transaction:
         self.outTransactions = serialized_Res['outTransactions']
 
     def __str__(self):
-        str_result = "----------\n"
-        str_result += "txn: {}\n".format(self.getTxn())
-        str_result += "timestamp: {}\n".format(self.timestamp)
-        str_result += "randID: {}\n".format(self.randNum)
-        str_result += "inTransactions:\n"
-        for _ in range(len(self.inTransactions)):
-            str_result += str(self.inTransactions[_]) + "\n"
-        str_result += "outTransactions:\n"
-        for _ in range(len(self.outTransactions)):
-            str_result += str(self.outTransactions[_][:2]) + " [OP_Script Omitted ...]" + "\n"
-        str_result += "----------"
-        return str_result
+        return self.serialize()
 
     def __repr__(self):
         return self.serialize()
-
-if __name__ == "__main__":
-    testLedger = Ledger()
-    TransactionAgent = TransactionFactory((1109, 2003), (424, 2003))
-    newTx = TransactionAgent.createTransaction(testLedger,tuple([10]),(),(),isCoinBase=True)
-    testLedger.addTransaction(newTx)
-    print(testLedger.items())
