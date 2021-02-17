@@ -1,33 +1,24 @@
 # GZFLS Blockchain Project
 
+## OP Script
 
+OP Script has three status - OP Template, OP Script, OP Runtime
+
+when one is writing an OP Script, the script will have `OP_Temp 1` to `OP_Temp n`. When the OP Generator is generating a new OP Script from OP Template, the given parameter will replace the `OP_Temp` line.
+
+When the OP Script is running, the OP Engine will extract the actual code from OP script to OP Runtime.
+
+```
+OP Template -- OP Generator --> OP Script -- OP Engine --> OP Result
+```
+
+---
 
 `product` store the previous version of project.
 
 `buildVersion` is the current version of project we are working on
 
 `test` will have some fancy implementation that we may add into project in the future.
-
-
-
-## Program Sequence Diagram
-
-### Process to Create A New Transaction
-
-```mermaid
-sequenceDiagram
-	TerminalAgent ->> TaskQueue: Create Transaction A
-	TaskQueue ->> TaskDistributor: Get Task
-	TaskDistributor ->> Worker: Distribute "CREATE_TX" Task to Worker
-	Worker ->> Worker: Create New Transaction
-	Worker ->> TaskQueue: New Task Registered:<br>{to:"miner", instruction:"ADD_TX", args:"TxA.serialize()"}
-	Worker ->> TaskQueue: New Task Registered:<br>{to:"webAgent", instruction:"SEND_TX", args:"TxA.serialize()"}
-	TaskQueue ->> TaskDistributor: Get Task
-	TaskDistributor ->> Miner: Distribute "ADD_TX" Task to Miner's new Block
-	TaskQueue ->> TaskDistributor: Get Task
-	TaskDistributor ->> webAgent: Distribute "SEND_TX" task tp webAgent
-	webAgent ->> webAgent: Send New Transaction <br> to Other Clients
-```
 
 ## Client Structure
 
@@ -41,7 +32,7 @@ There are three main parts of the client:
 
 `Worker` - process that do the actual work including mining, transaction verification, new transaction creation etc. (`miner` and `worker`, since miner needs to calculate the hash value for most of the time and we don't want the whole working process being clogged, we put most of the light-calculation work to `worker` while heavy-calculation work to `miner`).
 
-![Structure.png](./Structure.png)
+![Structure.png](http://ww1.sinaimg.cn/large/008fIx3Cgy1gnptlqswmoj30pw0jhgm9.jpg)
 
 Each worker has its own task queue. The tasks are serialized into the JSON form as example below
 
@@ -50,11 +41,11 @@ Each worker has its own task queue. The tasks are serialized into the JSON form 
     "To": "miner",
     "Instruction": "CREATE_BLOCK",
     "args": [
-        <Transaction Tx0 ...>,
-        <Transaction Tx1 ...>,
+        "<Transaction Tx0 ...>",
+        "<Transaction Tx1 ...>",
         ...
-        <Transaction Tx15 ...>,
-        currentDifficulty
+        "<Transaction Tx15 ...>",
+        "currentDifficulty": 1
     ]
 }
 ```
