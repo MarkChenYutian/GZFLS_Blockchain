@@ -48,3 +48,19 @@ class ShelveManager(dict):
 
     def __str__(self):
         return repr(self)
+
+    def wipeData(self, doWipe=False):
+        """
+        Clean all the data in shelve.
+
+        :param doWipe: set as Fasle by default, when is set as True, the wiping process will be silent. Otherwise, the notification prompt will pop out.
+        :returns: None
+        """
+        if not doWipe:
+            res = input("[WARNING] You are attempting to wipe all the data in {}, input 'y' to continue".format(self.dataPath))
+            doWipe = res == 'y'
+        if doWipe:
+            with shelve.open(self.dataPath, writeback=True) as dictionary:
+                for key in dictionary: del dictionary[key]
+        print("The Shelve @ {} is Cleared.".format(self.dataPath))
+        
