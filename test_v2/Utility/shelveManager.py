@@ -12,6 +12,7 @@ class ShelveManager(dict):
         super().__init__()
         self.dataPath = "./Storage/" + fileName
         self.len = 0
+        with shelve.open(self.dataPath): pass
 
     def __len__(self):
         return self.len
@@ -48,3 +49,11 @@ class ShelveManager(dict):
 
     def __str__(self):
         return repr(self)
+
+    def keys(self):
+        with shelve.open(self.dataPath) as openShelve:
+            return dict(openShelve).keys()
+
+    def wipeData(self):
+        print("The Data in {} is removed.".format(repr(self)))
+        shelve.open(self.dataPath, flag="n")

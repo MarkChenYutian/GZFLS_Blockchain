@@ -1,0 +1,6 @@
+.vscode
+.idea
+Storage
+__pychche__/
+*.pem
+*.pyc
