@@ -4,6 +4,7 @@ By Mark, 2021/02/12
 """
 from Transaction.transaction import Transaction
 from Ledger.ledger import Ledger
+from Utility.exceptions import NotEnoughBalanceException
 from RSA.RSA_util import *
 
 class TransactionFactory:
@@ -37,7 +38,7 @@ class TransactionFactory:
         :return: Transaction Object
         """
         balance, myTransactions = ledger.getUserBalance(self.myPubKeyString)
-        assert balance > amount, "You Don't have enough balance to initiate this Transaction"
+        if balance < amount: raise NotEnoughBalanceException(balance, amount)
 
         newTx = Transaction(isCoinBase=False)
         total_in, index = 0.0, 0
@@ -54,14 +55,35 @@ class TransactionFactory:
         return newTx
 
 
-    def transactToMul(self, pubKeys: tuple, amounts: tuple) -> Transaction:
+    def transactToMult(self,pubKeys: tuple,amounts: tuple,ledger: Ledger) -> Transaction:
         """
         :param pubKeys: The public keys of receivers you want to transact to.
         :param amounts: Amount of money transact to each receiver
         :return: Transaction Object
         """
-        # TODO: Create a Transaction Object with multiple outputs.
-        pass
+        balance, myTransactions = ledger.getUserBalance(self.myPubKeyString)
+        totalAmount = sum(amounts)
+
+        if balance < totalAmount: raise NotEnoughBalanceException(balance, totalAmount)
+
+        newTx = Transaction(isCoinBase=False)
+        total_in, index = 0.0, 0
+
+        while total_in < totalAmount and index < len(myTransactions):
+            myTxID, myTxIndex, myTxAmount = myTransactions[index]
+            total_in += myTxAmount
+            myTxSignature = signSignature(self._myPrivateKey, myTxID)
+            newTx.addInTransaction(myTxID, myTxIndex, myTxSignature)
+            index += 1
+
+        if total_in > totalAmount:
+            newTx.addOutTransaction(total_in - totalAmount,pubKey=self.myPubKeyString)
+
+        for receiverPubKey, receiverAmount in zip(pubKeys, amounts):
+            newTx.addOutTransaction(receiverAmount, receiverPubKey)
+
+        return newTx
+
 
 
 if __name__ == "__main__":
@@ -71,6 +93,7 @@ if __name__ == "__main__":
 
     txFactoryA = TransactionFactory(privateKeyPath="./RSA/PrivateKeyA.pem", publicKeyPath="./RSA/PublicKeyA.pem")
     txFactoryB = TransactionFactory(privateKeyPath="./RSA/PrivateKeyB.pem",publicKeyPath="./RSA/PublicKeyB.pem")
+    txFactoryC = TransactionFactory(privateKeyPath="./RSA/PrivateKeyC.pem",publicKeyPath="./RSA/PublicKeyC.pem")
 
     commonLedger = Ledger(dataPath="commonLedger.db")
     commonLedger.wipeData()
@@ -78,20 +101,28 @@ if __name__ == "__main__":
     # Give A and B 20 coins each.
     newTx1 = txFactoryA.fromCoinBase(amount=20)
     newTx2 = txFactoryB.fromCoinBase(amount=20)
+    newTx3 = txFactoryC.fromCoinBase(amount=20)
 
     commonLedger.addNewTransaction(newTx1)
     commonLedger.addNewTransaction(newTx2)
-
-    print("")
-    for key in commonLedger.keys():
-        print(commonLedger[key])
-    print("")
-
-    print(commonLedger.getBalanceStat())
+    commonLedger.addNewTransaction(newTx3)
 
     # A give B 5 coins
     newTx3 = txFactoryA.transactTo(txFactoryB.myPubKeyString, 5, commonLedger)
 
     commonLedger.addNewTransaction(newTx3)
 
+    # B give A, C 10 coins
+    newTx4 = txFactoryB.transactToMult((txFactoryA.myPubKeyString,txFactoryC.myPubKeyString),(10,10),commonLedger)
+    commonLedger.addNewTransaction(newTx4)
+
+    # A give C 21 coins
+
+    newTx5 = txFactoryA.transactTo((txFactoryC.myPubKeyString), 21, commonLedger)
+    commonLedger.addNewTransaction(newTx5)
+
+    print("")
     print(commonLedger.getBalanceStat())
+    print("")
+
+    commonLedger.visualize()

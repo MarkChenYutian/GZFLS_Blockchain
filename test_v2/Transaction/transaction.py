@@ -49,7 +49,7 @@ class Transaction:
             "isUsed": isUsed
         })
 
-    def dumps(self) -> str:
+    def dumps(self, indent=0) -> str:
         """
         convert the current object to a string for web transport etc.
         :return:
@@ -64,7 +64,7 @@ class Transaction:
             "inTransactions": self.inTransactions,
             "outTransactions": self.outTransactions
         }
-        return json.dumps(info_dict)
+        return json.dumps(info_dict, indent=indent)
 
     @classmethod
     def loads(cls, string: str):

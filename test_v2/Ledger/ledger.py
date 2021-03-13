@@ -8,6 +8,15 @@ from typing import List, Tuple
 
 from Utility.shelveManager import ShelveManager
 from Transaction.transaction import Transaction
+from Utility.exceptions import TransactionNotExist
+
+# Import Visualization Tools
+CAN_VISUALIZE = False
+try:
+    from Visualize.visualizeTxChain import visualizeTransactionChain
+    CAN_VISUALIZE = True
+except ImportError:
+    print("Failed to import Visualization Toolset. The visualization method will not be available.")
 
 
 class Ledger(ShelveManager):
@@ -35,10 +44,17 @@ class Ledger(ShelveManager):
         :param key: Transaction ID
         :return: Transaction Object
         """
-        item_value = super().__getitem__(key)
-        return Transaction.loads(item_value)
+        try:
+            item_value = super().__getitem__(key)
+            return Transaction.loads(item_value)
+        except:
+            raise TransactionNotExist(key)
 
     def addNewTransaction(self, transactionObj: Transaction) -> None:
+        """
+        Add an new Transaction object into the ledger
+        :return: None
+        """
         self[transactionObj.id] = transactionObj
 
         # Set source Tx as used
@@ -71,14 +87,6 @@ class Ledger(ShelveManager):
             balanceStat[pubKey] = self.getUserBalance(pubKey)[0]
         return balanceStat
 
-if __name__ == '__main__':
-    os.chdir("./..")
-    print(os.getcwd())
-
-    testLedger = Ledger(dataPath="testLedger.db")
-    testLedger.wipeData()
-    newTransaction = Transaction(isCoinBase=True)
-    newTransaction.addOutTransaction(10, ("examplePubKey", 10))
-    testLedger[newTransaction.id] = newTransaction
-    print(testLedger.keys())
-    print(testLedger.getUserBalance(("examplePubKey", 10)))
+    def visualize(self):
+        if CAN_VISUALIZE: visualizeTransactionChain(self)
+        else: print("Ledger.visualize() is called, but not executed since Import of Visualization Tools failed.")

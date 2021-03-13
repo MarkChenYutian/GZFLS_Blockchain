@@ -7,6 +7,7 @@ Reference: https://www.jianshu.com/p/7a4645691c68.
 
 """
 from Crypto.PublicKey import RSA
+from Crypto.PublicKey.RSA import RsaKey
 from Crypto.Cipher import PKCS1_v1_5 as PKCS1_v1_5_cipher
 from Crypto.Signature import PKCS1_v1_5
 from hashlib import sha3_256
@@ -15,7 +16,7 @@ import base64
 import os
 
 
-def generateRSAKey(bits=2048, privateKeyPath = "./RSA/PrivateKey.pem", publicKeyPath = "./RSA/PublicKey.pem") -> None:
+def generateRSAKey(bits=1024, privateKeyPath = "./RSA/PrivateKey.pem", publicKeyPath = "./RSA/PublicKey.pem") -> None:
     """
     Generate Keys in ./RSA folder
     :param bits: The length of RSA Key
@@ -40,7 +41,7 @@ def loadKeys(pubKeyPath="./RSA/PrivateKey.pem", privateKeyPath="./RSA/PublicKey.
     return publicKey, privateKey
 
 
-def getMaxBlockSize(rsaKey, isEncrypt=True) -> int:
+def getMaxBlockSize(rsaKey: RsaKey, isEncrypt=True) -> int:
     """
     Calculate the Maximum Block Size of RSA Process
     :param rsaKey: The RSA Key used to encrypt / decrypt message
@@ -53,7 +54,7 @@ def getMaxBlockSize(rsaKey, isEncrypt=True) -> int:
     return int(maxSize)
 
 
-def encrypt(rsaKey, message: str) -> str:
+def encrypt(rsaKey: RsaKey, message: str) -> str:
     """
     Encrypt Result using given rsa Key
     :param rsaKey: The RSA Key used to encrypt Message
@@ -71,7 +72,8 @@ def encrypt(rsaKey, message: str) -> str:
     encryptRes = base64.b64encode(encryptRes)
     return encryptRes.decode("ascii")
 
-def decrypt(rsaKey, message: str) -> str:
+
+def decrypt(rsaKey: RsaKey, message: str) -> str:
     message = message.encode("ascii")
     decryptRes = b""
     maxBlockSize = getMaxBlockSize(rsaKey=rsaKey, isEncrypt=False)
@@ -84,13 +86,23 @@ def decrypt(rsaKey, message: str) -> str:
         decryptRes += out_data
     return decryptRes.decode("ascii")
 
-def signSignature(rsaKey, message: str) -> str:
+
+def signSignature(rsaKey: RsaKey, message: str) -> str:
     msgHash = sha3_256(message.encode("ascii")).hexdigest()
     return encrypt(rsaKey, msgHash)
 
-def verifySignature(rsaKey, signature: str, expectContent: str) -> bool:
+
+def verifySignature(rsaKey: RsaKey, signature: str, expectContent: str) -> bool:
     sigContent = decrypt(rsaKey, signature)
     return sigContent == sha3_256(expectContent.encode("ascii")).hexdigest()
+
+
+def loadKeyFromString(rsaKeyString: str) -> RsaKey:
+    """
+    :param rsaKeyString: Load an RsaKey object from the RSA Key String.
+    :return: RsaKey loaded from String
+    """
+    return RSA.import_key(rsaKeyString)
 
 
 if __name__ == "__main__":
