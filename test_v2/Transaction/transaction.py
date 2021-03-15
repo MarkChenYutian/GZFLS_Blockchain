@@ -1,15 +1,11 @@
 """
-This File writes the Transaction Class For GZFLS Blockchain Project
+This File writes the Transaction Class For the Blockchain Project
 By Mark, 2021 / 02 / 11
 """
 import uuid
 import json
-import time
+import datetime
 from hashlib import sha3_256
-from typing import *
-
-# Type Definition
-Script = Dict[AnyStr, List[AnyStr]]
 
 
 class Transaction:
@@ -17,9 +13,10 @@ class Transaction:
     Transaction class is only used to store value, no actual method is defined here.
     Methods to create a Transaction object is defined in TransactionFactory class.
     """
+
     def __init__(self, isCoinBase=False, **kwargs):
         self.version = 1.0
-        self.time = time.time()
+        self.time = datetime.datetime.now().strftime("%c")
         self.id = str(uuid.uuid4())
         self.kwargs = kwargs  # reserved for future updates
 
@@ -27,33 +24,33 @@ class Transaction:
         self.inTransactions = []
         self.outTransactions = []
 
-    def addInTransaction(self, inTxID: str, inTxIndex: int, inTxAnswer: tuple) -> None:
+    def addInTransaction(self, inTxID: str, inTxIndex: int, inTxSignature: str) -> None:
         """
         :param inTxID: Transaction ID of inTransaction (note: it's different from hash(inTransaction) in this version)
         :param inTxIndex: The index of item in outTransaction of inTransaction
-        :param inTxAnswer: The tuple that contains correct parameters to OP Script in transactions.
+        :param inTxSignature: The signature of TxID for inTransaction
         :return: None
         """
         self.inTransactions.append({
             "inTransactionID": inTxID,
             "inTransactionIndex": inTxIndex,
-            "inTransactionAnswer": inTxAnswer
+            "inTransactionSig": inTxSignature,
         })
 
-    def addOutTransaction(self, amount: float, OP_Script: Script, isUsed=False) -> None:
+    def addOutTransaction(self, amount: float, pubKey: str, isUsed=False) -> None:
         """
         :param amount: The amount of money in transaction
-        :param OP_Script: The OP Script used to prove the ownership of transaction
+        :param pubKey: The public key of receiver
         :param isUsed: whether the output is used
         :return: None
         """
         self.outTransactions.append({
             "amount": amount,
-            "OP_Script": OP_Script,
+            "pubKey": pubKey,
             "isUsed": isUsed
         })
 
-    def dumps(self) -> str:
+    def dumps(self, indent=0) -> str:
         """
         convert the current object to a string for web transport etc.
         :return:
@@ -68,7 +65,7 @@ class Transaction:
             "inTransactions": self.inTransactions,
             "outTransactions": self.outTransactions
         }
-        return json.dumps(info_dict)
+        return json.dumps(info_dict, indent=indent)
 
     @classmethod
     def loads(cls, string: str):
@@ -89,14 +86,14 @@ class Transaction:
         for json_inTx in info_dict['inTransactions']:
             inTxID = json_inTx['inTransactionID']
             inTxIndex = json_inTx['inTransactionIndex']
-            inTxAnswer = json_inTx['inTransactionAnswer']
-            newTx.addInTransaction(inTxID, inTxIndex, inTxAnswer)
+            inTxSig = json_inTx['inTransactionSig']
+            newTx.addInTransaction(inTxID, inTxIndex, inTxSig)
         # Add 'outTransaction'
         for json_outTx in info_dict['outTransactions']:
             outAmount = json_outTx['amount']
-            outOPScript = json_outTx['OP_Script']
+            outPubKey = json_outTx['pubKey']
             outIsUsed = json_outTx['isUsed']
-            newTx.addOutTransaction(outAmount, outOPScript, isUsed=outIsUsed)
+            newTx.addOutTransaction(outAmount, outPubKey, isUsed=outIsUsed)
 
         return newTx
 
@@ -106,8 +103,8 @@ class Transaction:
     def __hash__(self) -> int:
         infoString = self.id
         infoString += "".join([str(item['inTransactionID']) +
-                              str(item['inTransactionAnswer']) for item in self.inTransactions])
-        infoString += "".join([json.dumps(item['OP_Script']) for item in self.outTransactions])
+                               str(item['inTransactionSig']) for item in self.inTransactions])
+        infoString += "".join([str(item["pubKey"]) for item in self.outTransactions])
         return int(sha3_256(infoString.encode('utf-8')).hexdigest(), 16)
 
     def __repr__(self) -> str:
@@ -128,7 +125,9 @@ class Transaction:
 
 if __name__ == "__main__":
     test = Transaction()
-    test.addInTransaction("testID1", 0, (1, 2, 3))
-    test.addOutTransaction(0.2, {"script": ["1", "2"]})
-    print(hash(test))
-
+    test.addInTransaction("testID1", 0, "ExampleSignature")
+    test.addOutTransaction(0.2, "ExamplePubKey")
+    serialized = test.dumps()
+    print(serialized)
+    loaded = Transaction.loads(serialized)
+    print(repr(loaded))

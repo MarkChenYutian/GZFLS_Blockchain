@@ -4,7 +4,9 @@ operate a shelve object (like a dictionary).
 
 By Mark, 2021/02/13
 """
+import os
 import shelve
+from Utility.richConsole import console
 
 
 class ShelveManager(dict):
@@ -12,6 +14,16 @@ class ShelveManager(dict):
         super().__init__()
         self.dataPath = "./Storage/" + fileName
         self.len = 0
+
+        if  os.path.isfile(self.dataPath + ".dir") and \
+            os.path.isfile(self.dataPath + ".dat") and \
+            os.path.isfile(self.dataPath + ".bak"):
+            console.info("The shelve manager detect shelve file {} already exist. "
+                         "The data will be loaded directly.".format(self.dataPath))
+        else:
+            console.warning("Can't detect a shelve cache file / cache file is damaged. "
+                            "({}) An empty shelve will be created.".format(self.dataPath))
+            with shelve.open(self.dataPath): pass
 
     def __len__(self):
         return self.len
@@ -49,18 +61,10 @@ class ShelveManager(dict):
     def __str__(self):
         return repr(self)
 
-    def wipeData(self, doWipe=False):
-        """
-        Clean all the data in shelve.
+    def keys(self):
+        with shelve.open(self.dataPath) as openShelve:
+            return dict(openShelve).keys()
 
-        :param doWipe: set as Fasle by default, when is set as True, the wiping process will be silent. Otherwise, the notification prompt will pop out.
-        :returns: None
-        """
-        if not doWipe:
-            res = input("[WARNING] You are attempting to wipe all the data in {}, input 'y' to continue".format(self.dataPath))
-            doWipe = res == 'y'
-        if doWipe:
-            with shelve.open(self.dataPath, writeback=True) as dictionary:
-                for key in dictionary: del dictionary[key]
-        print("The Shelve @ {} is Cleared.".format(self.dataPath))
-        
+    def wipeData(self):
+        console.info("The Data in {} is removed.".format(self.dataPath))
+        shelve.open(self.dataPath, flag="n")

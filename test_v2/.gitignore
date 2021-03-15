@@ -1,0 +1,9 @@
+.vscode
+.idea
+__pychche__/
+*.pem
+*.pyc
+*.bak
+*.dat
+*.dir
+*.gv

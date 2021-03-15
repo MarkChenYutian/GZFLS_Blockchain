@@ -2,26 +2,26 @@
 This file define the TransactionFactory class to create an actual transaction object.
 By Mark, 2021/02/12
 """
-import json
-from hashlib import sha3_256
-from typing import *
 from Transaction.transaction import Transaction
-
-# Type Definition
-Script = Dict[AnyStr, List[AnyStr]]
+from Ledger.ledger import Ledger
+from Utility.exceptions import NotEnoughBalanceException
+from Utility.richConsole import console
+from RSA.RSA_util import *
 
 
 class TransactionFactory:
-    def __init__(self, myScript: Script, mySecret: Any):
+    def __init__(self, privateKeyPath="./RSA/PrivateKey.pem", publicKeyPath="./RSA/PublicKey.pem"):
         """
-        :param myScript: The script that will be written by others in transaction to you.
-        :param mySecret: The parameters that will allow 'myScript' return True
+        :param privateKeyPath: The file path to private key file for the specific user.
+        :param publicKeyPath: The file path to public key file for the user.
         """
-        assert myScript['type'] == 'Script'
-        self.myScript = myScript
-        self.myScriptHash = sha3_256(json.dumps(myScript).encode('utf-8')).hexdigest()
-        # Protected Attribute
-        self._mySecret = mySecret
+        try:
+            self.myPubKey, self._myPrivateKey = loadKeys(privateKeyPath=privateKeyPath, pubKeyPath=publicKeyPath)
+        except FileNotFoundError:
+            console.warning("No Key File Detected. The RSA Keys will be generated in {} and {}.".format(privateKeyPath, publicKeyPath))
+            generateRSAKey(publicKeyPath=publicKeyPath, privateKeyPath=privateKeyPath)
+            self.myPubKey, self._myPrivateKey = loadKeys(privateKeyPath=privateKeyPath, pubKeyPath=publicKeyPath)
+        self.myPubKeyString = open(publicKeyPath).read().strip().replace("\n", "")
 
     def fromCoinBase(self, amount: float) -> Transaction:
         """
@@ -29,32 +29,61 @@ class TransactionFactory:
         :return: Transaction Object
         """
         newTx = Transaction(isCoinBase=True)
-        newTx.addOutTransaction(amount, self.myScript)
+        newTx.addOutTransaction(amount, self.myPubKeyString)
         return newTx
 
-    def transactTo(self, receiver_Script: Script, amount: float, ledger) -> Transaction:
+    def transactTo(self, receiver_pubKey: str, amount: float, ledger) -> Transaction:
         """
         :param ledger: The Ledger object that stores all the VALID transaction in it.
-        :param OP_Script_param: Parameters to generate OP Script to check ownership of coins for receiver
+        :param receiver_pubKey: The receiver's Public Key
         :param amount: Amount of money transact to receiver.
         :return: Transaction Object
         """
-        # TODO: Create a Transaction Object normally.
-        balance, availableTx = ledger.getUserBalance(self.myScriptHash)
-        # FIXME: replace Exception with more specific Blockchain Exception Type
-        if balance < amount: raise Exception("Not Enough Balance to create the designated transaction")
+        balance, myTransactions = ledger.getUserBalance(self.myPubKeyString)
+        if balance < amount:
+            raise NotEnoughBalanceException(balance, amount)
 
-        newTx = Transaction()
-        curr_amount = 0
-        for txID, index, amount in availableTx:
-            curr_amount += amount
-            newTx.addInTransaction()
-            if curr_amount >= amount:
+        newTx = Transaction(isCoinBase=False)
+        total_in, index = 0.0, 0
+        while total_in < amount and index < len(myTransactions):
+            myTxID, myTxIndex, myTxAmount = myTransactions[index]
+            total_in += myTxAmount
+            myTxSignature = signSignature(self._myPrivateKey, myTxID)
+            newTx.addInTransaction(myTxID, myTxIndex, myTxSignature)
+            index += 1
 
-    def transactToMul(self, OP_Script_param: Tuple[Script], amount: Tuple[float]) -> Transaction:
+        if total_in > amount:
+            newTx.addOutTransaction(total_in - amount, pubKey=self.myPubKeyString)
+        newTx.addOutTransaction(amount, pubKey=receiver_pubKey)
+        return newTx
+
+    def transactToMult(self, pubKeys: tuple, amounts: tuple, ledger: Ledger) -> Transaction:
         """
-        :param OP_Script_param: Tuple of OP Script Parameters for different receivers.
-        :param amount: Amount of money transact to each receiver
+        :param pubKeys: The public keys of receivers you want to transact to.
+        :param amounts: Amount of money transact to each receiver
+        :param ledger: The Ledger object that stores all the VALID transaction in it.
         :return: Transaction Object
         """
-        # TODO: Create a Transaction Object with multiple outputs.
+        balance, myTransactions = ledger.getUserBalance(self.myPubKeyString)
+        totalAmount = sum(amounts)
+
+        if balance < totalAmount:
+            raise NotEnoughBalanceException(balance, totalAmount)
+
+        newTx = Transaction(isCoinBase=False)
+        total_in, index = 0.0, 0
+
+        while total_in < totalAmount and index < len(myTransactions):
+            myTxID, myTxIndex, myTxAmount = myTransactions[index]
+            total_in += myTxAmount
+            myTxSignature = signSignature(self._myPrivateKey, myTxID)
+            newTx.addInTransaction(myTxID, myTxIndex, myTxSignature)
+            index += 1
+
+        if total_in > totalAmount:
+            newTx.addOutTransaction(total_in - totalAmount, pubKey=self.myPubKeyString)
+
+        for receiverPubKey, receiverAmount in zip(pubKeys, amounts):
+            newTx.addOutTransaction(receiverAmount, receiverPubKey)
+
+        return newTx
