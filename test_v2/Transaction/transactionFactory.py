@@ -5,6 +5,7 @@ By Mark, 2021/02/12
 from Transaction.transaction import Transaction
 from Ledger.ledger import Ledger
 from Utility.exceptions import NotEnoughBalanceException
+from Utility.richConsole import console
 from RSA.RSA_util import *
 
 
@@ -17,7 +18,7 @@ class TransactionFactory:
         try:
             self.myPubKey, self._myPrivateKey = loadKeys(privateKeyPath=privateKeyPath, pubKeyPath=publicKeyPath)
         except FileNotFoundError:
-            print("No Key File Detected. The RSA Keys will be generated in directory ./RSA as default.")
+            console.warning("No Key File Detected. The RSA Keys will be generated in {} and {}.".format(privateKeyPath, publicKeyPath))
             generateRSAKey(publicKeyPath=publicKeyPath, privateKeyPath=privateKeyPath)
             self.myPubKey, self._myPrivateKey = loadKeys(privateKeyPath=privateKeyPath, pubKeyPath=publicKeyPath)
         self.myPubKeyString = open(publicKeyPath).read().strip().replace("\n", "")

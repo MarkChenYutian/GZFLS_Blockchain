@@ -6,6 +6,7 @@ Note that there may have sub-chains due to conflict etc.
 from Utility.shelveManager import ShelveManager
 from Utility.exceptions import BlockNotFoundException, BlockChainNotSyncException, BlockChainNotAcceptException
 from Block.block import Block
+from Utility.richConsole import console
 
 # Import Visualization Tools
 CAN_VISUALIZE = False
@@ -13,7 +14,7 @@ try:
     from Visualize.visualizeBlockChain import visualizeBlockChain
     CAN_VISUALIZE = True
 except ImportError:
-    print("Failed to import Visualization Toolset. The visualization method(s) will not be available.")
+    console.error("Failed to import Visualization Toolset. The visualization method(s) will not be available.")
 
 
 class Blockchain(ShelveManager):
@@ -36,7 +37,7 @@ class Blockchain(ShelveManager):
         """
         assert isinstance(item, Block), "Blockchain class can only store Block Object as value."
         if key in self.keys():
-            print("WARNING: The Blockchain appears to have a hash collision on key {}".format(key))
+            console().warning("The Blockchain appears to have a hash collision on key {}".format(key))
 
         item_value = item.dumps()
         super(Blockchain, self).__setitem__(key, item_value)
@@ -73,6 +74,7 @@ class Blockchain(ShelveManager):
 
     def merge(self, otherChain) -> None:
         diffIds = set(otherChain.keys()) - set(self.keys())
+        CHANGENUM = 0
 
         hasChange = True
         while hasChange:
@@ -80,7 +82,10 @@ class Blockchain(ShelveManager):
             for diffId in diffIds:
                 if otherChain[diffId].prevHash in self.keys() and diffId not in self.keys():
                     self[diffId] = otherChain[diffId]
+                    CHANGENUM += 1
                     hasChange = True
+
+        if CHANGENUM < len(diffIds): console.warning("Some of the Blocks failed to merge")
 
     def findMainChain(self) -> list:
         """
@@ -119,14 +124,42 @@ class Blockchain(ShelveManager):
                 leafID.add(blockID)
         return leafID
 
-    def getTailID(self):
+    def getTailID(self) -> str:
         return list(set(self.findMainChain()).intersection(self.findLeafNodes()))[0]
+
+    def getTail(self) -> Block:
+        return self[self.getTailID()]
+
+    def syncWithLedger(self, ledger) -> None:
+        mainChain = self.findMainChain()
+        TxOnMainChain = []
+        TxIDOnMainChain = set()
+        for blockID in mainChain:
+            TxOnMainChain += self[blockID].transactions
+            TxIDOnMainChain = TxIDOnMainChain.union(self[blockID].transactionIDs)
+
+        for txID in ledger.keys():
+            # Remove the transaction in ledger that is NOT on main chain
+            if txID not in TxIDOnMainChain:
+                del ledger[txID]
+
+
+        hasChange = True
+        while hasChange:
+            hasChange = False
+            for tx in TxOnMainChain:
+                if tx.id not in ledger.keys() and {item["inTransactionID"] for item in tx.inTransactions}.issubset(set(ledger.keys())):
+                    ledger.addNewTransaction(tx)
+
 
     def visualize(self):
         """
         Visualization of blockchain branching.
         """
         if CAN_VISUALIZE:
-            visualizeBlockChain(self)
+            try:
+                visualizeBlockChain(self)
+            except Exception as e:
+                console.error("Failed to visualize Blockchain object. No image output. Exception Detail: \n[red]{}[/red]".format(e))
         else:
-            print("Blockchain.visualize() is called, but not executed since we can't import the visual tools.")
+            console.warning("Blockchain.visualize() is called, but not executed since we can't import the visual tools.")

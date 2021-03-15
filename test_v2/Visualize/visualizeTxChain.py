@@ -1,4 +1,6 @@
+import uuid
 from graphviz import Digraph
+from Utility.richConsole import console
 
 
 def visualizeTransactionChain(ledger):
@@ -23,7 +25,7 @@ def colorDistributor(ledger):
 def visualizeTransaction(G: Digraph, transaction, colorBar, ledger):
     if transaction.isCoinBase:
         G.node(transaction.id,
-               label="Transaction ID: \\n" + transaction.id,
+               label="Transaction ID: \\l" + transaction.id,
                shape="box",
                style="filled",
                color=colorBar[transaction.outTransactions[0]["pubKey"]])
@@ -39,7 +41,7 @@ def visualizeTransaction(G: Digraph, transaction, colorBar, ledger):
         preID = transaction.inTransactions[0]["inTransactionID"]
         preIndex = transaction.inTransactions[0]["inTransactionIndex"]
         G.node(transaction.id,
-               label="Transaction ID: \\n" + transaction.id,
+               label="Transaction ID: \\l" + transaction.id,
                shape="box",
                style="filled",
                color=colorBar[ledger[preID].outTransactions[preIndex]["pubKey"]])
@@ -55,7 +57,9 @@ def visualizeTransaction(G: Digraph, transaction, colorBar, ledger):
             G.edge(transaction.id, transaction.id + "-" + str(index))
 
 
-def showGraph(G, name="visualizeLedger.gv"):
+def showGraph(G, name="visualizeLedger"):
+    name += "_" + str(uuid.uuid4()) + ".gv"
     G.save("./Storage/" + name)
+    console.info("Visualization Rendering. Graphviz source code is stored in Storage/{}".format(name))
     G.render("/Storage/" + name)
     G.view()
