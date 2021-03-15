@@ -1,10 +1,10 @@
 """
-This File writes the Transaction Class For GZFLS Blockchain Project
+This File writes the Transaction Class For the Blockchain Project
 By Mark, 2021 / 02 / 11
 """
 import uuid
 import json
-import time
+import datetime
 from hashlib import sha3_256
 
 
@@ -13,9 +13,10 @@ class Transaction:
     Transaction class is only used to store value, no actual method is defined here.
     Methods to create a Transaction object is defined in TransactionFactory class.
     """
+
     def __init__(self, isCoinBase=False, **kwargs):
         self.version = 1.0
-        self.time = time.time()
+        self.time = datetime.datetime.now().strftime("%c")
         self.id = str(uuid.uuid4())
         self.kwargs = kwargs  # reserved for future updates
 
@@ -39,7 +40,7 @@ class Transaction:
     def addOutTransaction(self, amount: float, pubKey: str, isUsed=False) -> None:
         """
         :param amount: The amount of money in transaction
-        :param OP_Script: The OP Script used to prove the ownership of transaction
+        :param pubKey: The public key of receiver
         :param isUsed: whether the output is used
         :return: None
         """
@@ -102,7 +103,7 @@ class Transaction:
     def __hash__(self) -> int:
         infoString = self.id
         infoString += "".join([str(item['inTransactionID']) +
-                              str(item['inTransactionSig']) for item in self.inTransactions])
+                               str(item['inTransactionSig']) for item in self.inTransactions])
         infoString += "".join([str(item["pubKey"]) for item in self.outTransactions])
         return int(sha3_256(infoString.encode('utf-8')).hexdigest(), 16)
 
@@ -130,5 +131,3 @@ if __name__ == "__main__":
     print(serialized)
     loaded = Transaction.loads(serialized)
     print(repr(loaded))
-
-

@@ -12,7 +12,8 @@ class ShelveManager(dict):
         super().__init__()
         self.dataPath = "./Storage/" + fileName
         self.len = 0
-        with shelve.open(self.dataPath): pass
+        with shelve.open(self.dataPath):
+            pass
 
     def __len__(self):
         return self.len

@@ -5,27 +5,32 @@ Provide RSA Service
 Reference: https://www.jianshu.com/p/7a4645691c68.
 **WARNING: The Crypto Code provided on this url have defect !**
 
+
+It is already known that the Python Crypto module is hard to install in some situations,
+if you have problems installing Crypto Module, perhaps this url will help.
+https://stackoverflow.com/questions/19623267/importerror-no-module-named-crypto-cipher
 """
 from Crypto.PublicKey import RSA
 from Crypto.PublicKey.RSA import RsaKey
 from Crypto.Cipher import PKCS1_v1_5 as PKCS1_v1_5_cipher
-from Crypto.Signature import PKCS1_v1_5
 from hashlib import sha3_256
 import Crypto
 import base64
 import os
 
 
-def generateRSAKey(bits=1024, privateKeyPath = "./RSA/PrivateKey.pem", publicKeyPath = "./RSA/PublicKey.pem") -> None:
+def generateRSAKey(bits=1024, privateKeyPath="./RSA/PrivateKey.pem", publicKeyPath="./RSA/PublicKey.pem") -> None:
     """
     Generate Keys in ./RSA folder
     :param bits: The length of RSA Key
+    :param privateKeyPath: The path of private key file
+    :param publicKeyPath: The path of public key file
     :return: None
     """
     privateKey = RSA.generate(bits)
-    with open(privateKeyPath,"wb") as privkey_file:
-        privkey_file.write(privateKey.export_key())
-    with open(publicKeyPath,"wb") as pubkey_file:
+    with open(privateKeyPath, "wb") as privateKey_file:
+        privateKey_file.write(privateKey.export_key())
+    with open(publicKeyPath, "wb") as pubkey_file:
         pubkey_file.write(privateKey.publickey().export_key())
 
 
@@ -66,7 +71,7 @@ def encrypt(rsaKey: RsaKey, message: str) -> str:
     maxBlockSize = getMaxBlockSize(rsaKey=rsaKey)
     cipher = PKCS1_v1_5_cipher.new(rsaKey)
     while message:
-        input_data, message = message[:maxBlockSize], message[maxBlockSize:]    # Get a block of input data
+        input_data, message = message[:maxBlockSize], message[maxBlockSize:]  # Get a block of input data
         out_data = cipher.encrypt(input_data)
         encryptRes += out_data
     encryptRes = base64.b64encode(encryptRes)
@@ -92,8 +97,8 @@ def signSignature(rsaKey: RsaKey, message: str) -> str:
     return encrypt(rsaKey, msgHash)
 
 
-def verifySignature(rsaKey: RsaKey, signature: str, expectContent: str) -> bool:
-    sigContent = decrypt(rsaKey, signature)
+def verifySignature(rsaKey: RsaKey, signatureString: str, expectContent: str) -> bool:
+    sigContent = decrypt(rsaKey, signatureString)
     return sigContent == sha3_256(expectContent.encode("ascii")).hexdigest()
 
 
@@ -108,8 +113,7 @@ def loadKeyFromString(rsaKeyString: str) -> RsaKey:
 if __name__ == "__main__":
     print("Current Working Directory: ", end="")
     os.chdir("./..")
-    print(os.getcwd()+"\n--------------")
-    pubKey, privKey = loadKeys()
-    signature = signSignature(privKey, "This is a Signature Test.")
+    print(os.getcwd() + "\n--------------")
+    pubKey, privateKey = loadKeys()
+    signature = signSignature(privateKey, "This is a Signature Test.")
     print(verifySignature(pubKey, signature, "This is a Signature Test"))
-

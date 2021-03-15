@@ -8,7 +8,6 @@ import datetime
 from hashlib import sha3_256
 
 from Transaction.transaction import Transaction
-from Ledger.ledger import Ledger
 from Utility.exceptions import BlockNotFinishException, SerializationProcessException
 
 
@@ -19,13 +18,15 @@ class Block:
         *** YOU SHOULD NEVER USE THIS CONSTRUCTOR DIRECTLY ***
         """
         self.info = {
-            "Creation Time": datetime.datetime.now().strftime("%y/%m/%d"),
-            "Filled Time": None,
+            "Creation Time": datetime.datetime.now().strftime("%c"),
+            "Finish Time": None,
             "Block Status": False,
+            "isLiteNode": False
         }
         self.difficulty = difficulty
         self.hashRoot = ""
-        self.transactionIDs = []
+        self.transactions = []
+        self.transactionIDs = set()
         self.height = None
         self.prevHash = None
         self.nounce = None
@@ -38,10 +39,13 @@ class Block:
         :param difficulty: if set as None (default), then inherit difficulty from previous block.
         :return: The new Block created
         """
-        diff = difficulty if difficulty is None else prevBlock.difficulty
-        self = cls(diff)
+        if difficulty is None:
+            diff = prevBlock.difficulty
+        else:
+            diff = difficulty
+        self = cls(difficulty=diff)
         self.height = prevBlock.height + 1
-        self.prevHash = hash(prevBlock)
+        self.prevHash = prevBlock.hexHash()
         return self
 
     @classmethod
@@ -53,7 +57,7 @@ class Block:
         """
         self = cls(difficulty)
         self.height = 0
-        self.prevHash = "0"
+        self.prevHash = "0ff"
         return self
 
     def addTransaction(self, transaction):
@@ -62,25 +66,26 @@ class Block:
         :param transaction:
         :return: None
         """
-        self.transactionIDs.append(transaction.id)
+        self.transactions.append(transaction)
+        self.transactionIDs.add(transaction.id)
 
-    def finishConstruction(self, miningFn, ledger: Ledger):
+    def finishConstruction(self, miningFn):
         """
         Finish the construction of block, find out the nounce value using mining function.
 
         Note the result nounce value returned by miningFn will NOT BE CHECKED for CORRECTNESS. In other word, the returned
         nounce value from miningFn will be trusted without any condition.
 
-        :param miningFn: A function of mining. will be called in the form of miningFn(prevHash, hashRoot, difficulty) and return proper nounce value.
+        :param miningFn: A function of mining. will be called in the form of miningFn(blockObject) and return proper nounce value.
         :return: None
         """
-        self.hashRoot = calculateRoot(self, ledger)
-        self.nounce = miningFn(self.prevHash, self.hashRoot, self.difficulty)
+        self.hashRoot = calculateRoot(self)
         self.info["Block Status"] = True
-        self.info["Finish Time"] = datetime.datetime.now().strftime("%y/%m/%d")
+        self.nounce = miningFn(self)
+        self.info["Finish Time"] = datetime.datetime.now().strftime("%c")
 
     def dumps(self) -> str:
-        if not self.info ["Block Status"]:
+        if not self.info["Block Status"]:
             raise BlockNotFinishException()
         blockDict = {
             "type": "Block",
@@ -89,7 +94,9 @@ class Block:
             "blockHeight": self.height,
             "blockNounce": self.nounce,
             "blockHashRoot": self.hashRoot,
-            "blockTxID": self.transactionIDs
+            "blockPrevHash": self.prevHash,
+            "blockTxs": [tx.dumps() for tx in self.transactions],
+            "blockTxID": list(self.transactionIDs)
         }
         return json.dumps(blockDict)
 
@@ -97,27 +104,39 @@ class Block:
     def loads(cls, jsonString: str):
         self = cls(difficulty=0)
         infoDict = json.loads(jsonString)
-        if infoDict["type"] != "Block": raise SerializationProcessException(jsonString)
+        if infoDict["type"] != "Block":
+            raise SerializationProcessException(jsonString)
         self.info = infoDict["blockInfo"]
         self.difficulty = infoDict["blockDifficulty"]
         self.height = infoDict["blockHeight"]
         self.nounce = infoDict["blockNounce"]
         self.hashRoot = infoDict["blockHashRoot"]
-        self.transactionIDs = infoDict["blockTxID"]
+        self.prevHash = infoDict["blockPrevHash"]
+        serializedTxs = infoDict["blockTxs"]
+        self.transactions = [Transaction.loads(serializedTx) for serializedTx in serializedTxs]
+        self.transactionIDs = set(infoDict["blockTxID"])
         return self
 
-    def __hash__(self):
-        if not self.info ["Block Status"]:
+    def convertToLite(self):
+        self.transactions = []  # Remove all the
+        self.info["isLiteNode"] = True
+
+    def hexHash(self):
+        if not self.info["Block Status"]:
             raise BlockNotFinishException()
 
-        return int(sha3_256(str(self.prevHash + self.hashRoot + self.nounce).encode("ascii")).hexdigest(),16)
+        return sha3_256((str(self.prevHash) + str(self.hashRoot) + str(self.nounce)).encode("ascii")).hexdigest()
+
+    def __hash__(self):
+        return int(self.hexHash(), 16)
 
     def __str__(self):
         return self.dumps()
 
     def __repr__(self):
         status = "Ready" if not self.info["Block Status"] else "Not Ready"
-        return "<Block Object @ {}, with {} Transactions in it, status: {}>".format(id(self), len(self.transactionIDs), status)
+        return "<Block Object @ {}, with {} Transactions in it, status: {}>".format(id(self), len(self.transactions),
+                                                                                    status)
 
     def __eq__(self, otherBlock):
         return self.prevHash == otherBlock.prevHash and self.nounce == otherBlock.nounce and self.hashRoot == otherBlock.hashRoot
@@ -126,13 +145,12 @@ class Block:
         return item.id in self.transactionIDs
 
 
-def calculateRoot(blockObject: Block, ledger: Ledger) -> str:
+def calculateRoot(blockObject: Block) -> str:
     """
     Given a block object, calculate the Hash Root for block
     :return: hashRoot
     """
-    txList = [ledger[TxID] for TxID in blockObject.transactionIDs]
+    txList = blockObject.transactions
     msgList = [str(hash(tx)) for tx in txList]
     msg = "".join(msgList)
     return sha3_256(msg.encode("ascii")).hexdigest()
-

@@ -22,7 +22,7 @@ def isTransactionBalance(transaction: Transaction, ledger: Ledger) -> None:
 
     FIXME: Currently, there is one way to hack the system by using not precise float comparison.
     For instance, suppose one deliberately let inTransaction = 1.0 and outTransaction to be 1.00000005, since we are using
-    UNPRECISE float comparison here, this Transaction will be considered as "Valid", and an 5 * 1e-7 coin will be
+    INACCURATE float comparison here, this Transaction will be considered as "Valid", and an 5 * 1e-7 coin will be
     created from nowhere.
 
     It is possible to solve this problem by
@@ -35,7 +35,8 @@ def isTransactionBalance(transaction: Transaction, ledger: Ledger) -> None:
         inAmount += inTransaction.outTransactions[inItem["inTransactionIndex"]]["amount"]
     for outItem in transaction.outTransactions:
         outAmount += outItem["amount"]
-    if inAmount == outAmount: raise NotBalanceTransactionException(inAmount, outAmount)
+    if inAmount == outAmount:
+        raise NotBalanceTransactionException(inAmount, outAmount)
 
 
 def isTransactionSigValid(transaction: Transaction, ledger: Ledger) -> None:
@@ -49,7 +50,7 @@ def isTransactionSigValid(transaction: Transaction, ledger: Ledger) -> None:
         inTxID, inTxIndex, inTxSig = inItem["inTransactionID"], inItem["inTransactionIndex"], inItem["inTransactionSig"]
         inTxPubKeyString = ledger[inTxID].outTransactions[inTxIndex]["pubKey"]
         inTxPubKey = loadKeyFromString(inTxPubKeyString)
-        if not verifySignature(rsaKey=inTxPubKey, signature=inTxSig, expectContent=inTxID):
+        if not verifySignature(rsaKey=inTxPubKey, signatureString=inTxSig, expectContent=inTxID):
             raise SignatureVerifyFailException()
 
 
@@ -62,7 +63,8 @@ def recursiveCheck(transaction: Transaction, ledger: Ledger, depthRemain=10) -> 
     be true automatically.
     :return: None
     """
-    if transaction.isCoinBase or depthRemain == 0: return
+    if transaction.isCoinBase or depthRemain == 0:
+        return
 
     isTransactionBalance(transaction, ledger)
     isTransactionSigValid(transaction, ledger)

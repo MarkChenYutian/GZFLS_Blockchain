@@ -3,8 +3,7 @@ This File Describe a Ledger Object that is using shelve to store transactions in
 
 By Mark, 2021/02/13
 """
-import os
-from typing import List, Tuple
+from typing import List
 
 from Utility.shelveManager import ShelveManager
 from Transaction.transaction import Transaction
@@ -16,7 +15,7 @@ try:
     from Visualize.visualizeTxChain import visualizeTransactionChain
     CAN_VISUALIZE = True
 except ImportError:
-    print("Failed to import Visualization Toolset. The visualization method will not be available.")
+    print("Failed to import Visualization Toolset. The visualization method(s) will not be available.")
 
 
 class Ledger(ShelveManager):
@@ -47,7 +46,7 @@ class Ledger(ShelveManager):
         try:
             item_value = super().__getitem__(key)
             return Transaction.loads(item_value)
-        except:
+        except KeyError:
             raise TransactionNotExist(key)
 
     def addNewTransaction(self, transactionObj: Transaction) -> None:
@@ -66,7 +65,7 @@ class Ledger(ShelveManager):
 
     def getUserBalance(self, publicKey: str) -> List[any]:
         """
-        :param ScriptHash: the hash value of an user's OP Script.
+        :param publicKey: The public key of the user.
         :return: [the available balance under that Script, [list of txID, index, and amount for available transactions]]
         """
         balance = 0.0
@@ -82,11 +81,14 @@ class Ledger(ShelveManager):
         pubKeys = set()
         balanceStat = dict()
         for TxID in self.keys():
-            for outItem in self[TxID].outTransactions: pubKeys.add(outItem["pubKey"])
+            for outItem in self[TxID].outTransactions:
+                pubKeys.add(outItem["pubKey"])
         for pubKey in pubKeys:
             balanceStat[pubKey] = self.getUserBalance(pubKey)[0]
         return balanceStat
 
     def visualize(self):
-        if CAN_VISUALIZE: visualizeTransactionChain(self)
-        else: print("Ledger.visualize() is called, but not executed since Import of Visualization Tools failed.")
+        if CAN_VISUALIZE:
+            visualizeTransactionChain(self)
+        else:
+            print("Ledger.visualize() is called, but not executed since Import of Visualization Tools failed.")
