@@ -4,7 +4,7 @@ from socket import *
 
 def get_my_ip():
     return gethostbyname(gethostname())
-def get_ip():
+def list_all_ip():
     all_ip = []
     result = []
     os.system('arp -a > temp.txt')
@@ -15,5 +15,3 @@ def get_ip():
         for i in range(0, len(all_ip)):
             result.append(all_ip[i][0][1:len(all_ip[i][0]) - 1])
         return result
-arr = get_ip()
-print(arr)
