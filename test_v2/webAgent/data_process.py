@@ -1,9 +1,9 @@
 ### 调用以前写过的方法即可
 def add_transaction():
-    pass
+    return True
 
 def add_block():
-    pass
+    return True
 
 def get_blockchain():
-    pass
+    return True
