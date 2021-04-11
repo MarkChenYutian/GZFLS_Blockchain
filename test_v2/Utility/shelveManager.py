@@ -15,15 +15,15 @@ class ShelveManager(dict):
         self.dataPath = "./Storage/" + fileName
         self.len = 0
 
-        if  os.path.isfile(self.dataPath + ".dir") and \
-            os.path.isfile(self.dataPath + ".dat") and \
-            os.path.isfile(self.dataPath + ".bak"):
-            console.info("The shelve manager detect shelve file {} already exist. "
-                         "The data will be loaded directly.".format(self.dataPath))
+        if os.path.isfile(self.dataPath + ".dir") and \
+                os.path.isfile(self.dataPath + ".dat") and \
+                os.path.isfile(self.dataPath + ".bak"):
+            console.info("Shelve file {} already exist. Data will be loaded directly.".format(self.dataPath))
         else:
             console.warning("Can't detect a shelve cache file / cache file is damaged. "
                             "({}) An empty shelve will be created.".format(self.dataPath))
-            with shelve.open(self.dataPath): pass
+            with shelve.open(self.dataPath):
+                pass
 
     def __len__(self):
         return self.len

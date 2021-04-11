@@ -129,6 +129,4 @@ chainA.syncWithLedger(ledgerA)
 chainB.syncWithLedger(ledgerB)
 chainC.syncWithLedger(ledgerC)
 
-chainA.visualize()
-chainB.visualize()
-chainC.visualize()
+ledgerB.visualize()

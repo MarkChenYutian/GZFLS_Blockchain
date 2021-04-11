@@ -1,259 +1,145 @@
-# GZFLS Blockchain Project
+# GW Blockchain Project
 
-This project aims to build a working blockchain on the base of Python that work as the projects in CS2 - Blockchain and Cryptography.
-
-## Project Structure
-
-The project have three main parts - worker, miner and webAgent
-
-```
-Project
-   |
-   |-Worker
-   |   |- Validate Transaction
-   |   |- Create Transaction
-   |   |- Maintain Ledger
-   |-Miner
-   |   |- Create Block (mining)
-   |-WebAgent
-       |- Send / Receive Transaction
-       |- Sent / Receive Block
-```
-
-In the actual project, these three parts are divided into three different processes.
+This project aims to implement a blockchain that can run on local network for educational purpose with pure python.
 
 ## Documentation
 
-### Transaction
+### class Transaction
 
-#### Class `Transaction`
+This class implement an transaction object in the blockchain. A transaction object is only used to store the information related with transaction.
 
-##### Field
+#### Fields
 
-The `Transaction` class only store the information of a transaction. The methods stored in it includes:
+| Field           | Type         | Explanation                                                  |
+| --------------- | ------------ | ------------------------------------------------------------ |
+| version         | `float`      | The version of this transaction object. Currently 1.0, if there are soft forking, then the version can be changed. |
+| time            | `str`        | The time that transaction object is created.                 |
+| id              | `str`        | The unique id of each transaction. (The id is generated using `uuid.uuid4()` in Python) |
+| kwargs          | `dict`       | The reserved field to store other properties in transaction object in the future. Currently empty. |
+| isCoinBase      | `bool`       | Whether the transaction is from COINBASE.                    |
+| inTransactions  | `List[Dict]` | Where the money in transaction comes from.                   |
+| outTransactions | `List[Dict]` | Where the money in transaction goes.                         |
 
-1. Where the money comes from
-   
-   `.inTransactions` store the source of money in Transaction. Unless the money comes from `COINBASE`, the money in transaction should have a source (i.e. how the transaction initiator get these money)
-   
-   The `.inTransaction` property is a list with dictionaries in it.
-   
-   ```python
-   self.inTransaction = [
-       {
-           "inTransactionID":  # Transaction ID, uuid4
-           "inTransactionIndex": # where the money comes from in the outTransaction
-           "scriptAnswer": # Proper parameter that will let OP Script return True
-       }
-   ]
-   ```
-   
-2. Who will receive the money
+The data in `inTransactions` will have such a form
 
-   The `.outTransactions` property in the Transaction class is used to store where the money goes. It is a list with dictionaries inside.
-
-   ```python
-   self.outTransaction = [
-       {
-           "amount": # float, the amount of money give to this receiver
-           "OP Script": # The OP Script that is used to verify the identity of receiver
-           "isUsed": # whether this transaction output is already spent by receiver
-       }
-   ]
-   ```
-
-3. The time that Transaction is created
-
-   `Transaction.time` is the time that Transaction object is created.
-
-4. The ID of Transaction
-
-   `Transaction.ID` is the `uuid` of Transaction Object that is created when running `__init__`.
-
-5. Version
-
-   The version of Transaction object - a float, currently `1.0`
-
-6. Reserved Field
-
-   The `self.kwargs` property is a reserved property of Transaction Object for future use. If you want to put something in the Transaction Object, you can pass through the keyword arguments of `__init__` function.
-
-##### Methods
-
-1. `addInTransaction(self, inTxID, inTxIndex, inTxAnswer)`
-
-   Create a new entry in the `.inTransaction` property of `Transaction` object.
-
-2. `addOutTransaction(self, amount, OP_Script, isUsed=False)`
-
-   Create a new entry in the `.outTransaction` property of `Transaction` object.
-
-3. `dumps(self)`
-
-   **Serialize** The Transaction Object. Using JSON to serialize the Transaction object into a string so that it can be stored into the `shelve` (in file system).
-
-   The serialized result will have a structure like this:
-
-   ```json
-   {
-       "type": "Transaction",
-       "version": 1.0,
-       "isCoinBase": False,
-       "time": 12345679,
-       "id": "uuid-example-uuidString",
-       "kwargs": {
-          	/* Currently empty, reserved for future use */
-       },
-       "inTransactions": [
-           {
-               "inTransactionID": "uuid-example-uuidString2",
-               "inTransactionIndex": 0,
-               "inTransactionAnswer": [
-                   12345,
-                   "example-rsa-result"
-               ]
-           },
-           /*Other inTransaction items*/
-       ],
-       "outTransactions": [
-           {
-               "amount": 4.29,
-               "OP_Script": "Example Script",
-               "isUsed": True
-           },
-           /*Other outTransaction items*/
-       ]
-   }
-   ```
-
-4. *`@classmethod`* `loads(cls, String)`
-
-   This is a class method, which means that you should call this method by calling
-
-   ```python
-   Transaction.load(exampleString)		# Correct
-   TxObject.load(exampleString)		# Incorrect, exception will be raised.
-   ```
-
-5. Internal Functions
-
-   Functions like `__eq__`, `__hash__`, `__repr__`, and `__str__` are defined to provide some basic methods.
-
-#### Class `TransactionFactory`
-
-As we have described above, the `Transaction` class does not contain any methods to create its content. Since there are multiple was to create a Transaction object, we specially use a `TransactionFactory` class to create Transactions.
-
-##### Field
-
-> ⚠ ==This sections is not determined yet, the content may change as we develop the project.==
-
-The `TransactionFactory` contains two fields - `mySecret` and `myIdentifier` , this is used to generate the `OPAnswer` in the `inTransaction` of new Transaction object and find the available money in Ledger.
-
-##### Methods
-
-A Transaction Factory has three methods to create Transactions
-
-1. `fromCoinBase(self, amount:float) -> Transaction`
-
-   Create a transaction from `COINBASE` send  `amount` to the owner of `TransactionFactory` himself.
-
-2. `transactTo(self, receiverScript, amount, ledger) -> Transaction`
-
-   Create a transaction to a specific receiver. The identity of receiver is designated by the `receiverScript`, which , by design, will return `True` only with the specific parameter provided by receiver.
-
-3. `transactToMul(self, receiverScripts, amounts, ledger) -> Transaction`
-
-   Create a transaction with multiple output. With this output methods, you can "combine" multiple transactions together and make the blockchain more efficient.
-
-### Ledger
-
-#### Class `ShelveManager`
-
-In this project, we want the data be kept in the file system so that we can resume from the progress we have already made. To save data after the program is terminated, we use a python internal module called `shelve`. It will create a dictionary in the file system where we can open to perform get, delete, find, and change value of it.
-
-However, since it is in the file system, every time you want to use the data inside it, you will have to open the shelve and close it like this:
-
-```python
-with shelve.open("./cache/ledger.db") as ledger:
-    ledger['uuid-example-id1'] = newTransactionObject
+```json
+[
+    {
+        "inTransactionID": "e00538f7-cc63-4846-a45a-25f0c3c1a239",
+        "inTransactionIndex": 0,
+        "inTransactionSig": "CwaJpxKTEWoauoHyo/ylhoVUsZbtYYM14KrunnFJG43GmyijEdVAXxdBqi6ly3zi0JWNKvOsaxhf3kn0Ki3BHZvVQnC9M03O64/ZeW9snS9VlXX+xReaevH4FMC7ozMX4RpeBo1X/uFo/CTXcv51mOMzYfrD/jRlLFPpXbCTBcY="
+    },
+    {
+        "inTransactionID": "exampleaa-uuid-txid-aaaa-aaaaaaaaaaa",
+        "inTransactionIndex": 1,
+        "inTransactionSig": "Example Base64 RSA Signature"
+    }
+]
 ```
 
-It will be inconvinent if such code is repeated multiple times in the single file. To solve this problem, we use the `LedgerManager` class to encapsulate it so that you can interact with `LedgerManager` class just as it is a dictionary without thinking open / file IO.
+The data in `outTransactions` will have such a form
 
-##### Field
+```json
+[
+    {
+        "amount": 10.0,
+        "pubKey": "-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC2vrvtk/Rl8OaSsG+IwyvtQs6BrC6pkMkHM8lkX9jQAN8YmX1we5mCBbqykvMfp81XWjktk4P2EiYFqHwPxv2auk1A5B1WOoZaJLByZsufNo2mp/upgMVUDwi/SRopgNWHDtKqqOHo0ljIYyfh1GVxl4qHmKejB4lJ3TTdEdJKCwIDAQAB-----END PUBLIC KEY-----",
+        "isUsed": false
+    }
+]
+```
 
-1. `self.len`
+#### Methods
 
-   The number of items currently in the shelve
+##### addInTransaction(self, inTxID: str, inTxIndex: int, inTxSignature: str) -> None
 
-2. `self.dataPath`
+Add an item of `inTransaction` into the `Transaction` object.
 
-   The path of Shelve file (designated when `__init__` is called)
+##### addOutTransaction(self, amount: float, pubKey: str, isUsed=False) -> None
 
-##### Method
+Add an item of `outTransaction` into the `Transaction` object.
 
-1. `__len__(self)` 
+##### dumps(self, indent=0) -> str
 
-   Get the number of item stored in the shelve. (call this function by using `len(ShelveManagerObj)`)
+Convert the transaction object to a JSON string. (indent can control the indent of resulting JSON string)
 
-2. `__getitem__(self, key)`
+##### @classmethod loads(cls, string: str)
 
-   Get the value of corresponding key.
+Load the serialized JSON String from method `dumps` to a new Transaction object. Note this is a *classmethod*, so this method should be called directly on class `Transaction` instead of calling on an `Transaction` object.
 
-   > Call this method by calling `ShelveManagerObj[key]`
+```python
+ExampleString = "{.... Example JSON Serialized Result of Tx Object ...}"
+newTransactionObject = Transaction.loads(ExampleString)
+```
 
-3. `__setitem__(self, key, value)`
 
-   Set a new key-value pair in the shelve
-   
-   > Call this method by calling `ShelveManagerObj[key] = value`
-   
-4. `__delitem__(self, key)`
-   
-   Remove a specific key-value pair inside the shelve.
-   
-   > Call this method by calling `del ShelveManagerObj[key]` or `ShelveManagerObj.pop(key)`
 
-5. `__iter__(self)`
-   
-   Return the iterator of `self.keys()`
-   
-   > Call this method by calling `for key in ShelveManagerObj`
-   
-6. `__contains__(self, key)`
+#### class TransactionFactory
 
-   Return `True` or `False` depend on whether the key is stored in the shelve.
+The `Transaction` class will not change the content stored in itself, so the creation of Transaction object is done by the `TransactionFactory`. There are three types of transaction that can be created - Transaction from COINBASE to oneself, Transaction to a single person, Transaction to multiple person at the same time.
 
-   > Call this method by calling `key in ShelveManagerObj`
+#### Fields
 
-7. `wipeData(self, doWipe=False)`
+| Fields         | Type                    | Explanation                                                  |
+| -------------- | ----------------------- | ------------------------------------------------------------ |
+| myPubKey       | `RsaKey`                | The public key of owner of TransactionFactory                |
+| _myPrivateKey  | `RsaKey`, private field | The private key of owner of TransactionFactory, used to create signature |
+| myPubKeyString | `str`                   | The string version of owner's public key (directly loaded from .pem key file) |
 
-   clean all the data inside the shelve by deleting all the key-value pair. When the `doWipe` keyword argument is `True`, the wiping process will be silent, otherwise, a prompt will pop up in the terminal.
+During the initialization process, if the RSA keys failed to load from the file path, then RSA keys will be generated automatically and then loaded.
 
-#### Class `Ledger`
+#### Methods
 
-This class inherited from class `ShelveManager` and modify the `__getitem__` and `__setitem__` method to encapsulate the serialize process.
+##### fromCoinBase(self, amount: float) -> Transaction
 
-##### Field
+Transaction from COINBASE to oneself.
 
-The field of Ledger object is the same as `ShelveManager` object.
+##### transactTo(self, receiver_pubKey: str, amount: float, ledger) -> Transaction
 
-##### Method
+Create a Transaction object transact to specific receiver public key.
 
-The Ledger class have most of its methods same as the `ShelveManager` class. Below will only list the overriding methods in class `Ledger`.
+##### transactToMult(self, pubKeys: tuple, amounts: tuple, ledger: Ledger) -> Transaction
 
-1. `__getitem__(self, key)`
+Transact to multiple public keys at a same time.
 
-   The ledger will automatically convert the serialized result stored in shelve into Transaction object and return it.
 
-2. `__setitem__(self, key, value)`
 
-   The parameter `value` must be a transaction object, or exception will be raised.
+### class ShelveManager
 
-   The value will be serialized to string and then add into shelve.
-   
-3. `getUserBalance(self, identifier)`
+This class provide an encapsulation on Python Shelve operation so we can use a shelve object exactly like a Python Dictionary (and don't need to open / close shelve explicitly in our code).
 
-   > ⚠ This method is not yet implemented. So there may have some changes in the release version.
+#### Fields
 
-   This method will return the unspent money under an identifier (currently, identifier is either Public Key or Public Key Hash).
+| Field    | Type  | Explanation                   |
+| -------- | ----- | ----------------------------- |
+| dataPath | `str` | The path of Shelve File.      |
+| len      | `int` | The number of item in Shelve. |
+
+If the dataPath designated does not exist, the ShelveManager will create a new shelve automatically at the position of dataPath.
+
+#### Methods
+
+##### \_\_getitem\_\_(self, item: str) -> str
+
+##### \_\_setitem\_\_(self, key: str, item: str) -> None
+
+##### \_\_delitem\_\_(self, key) -> None
+
+##### \_\_contains\_\_(self, key) -> bool
+
+With this method implemented, you can check whether a key is in the dictionary using
+
+```python
+key in ShelveManagerObject
+```
+
+##### \_\_iter\_\_(self) -> iterator
+
+Returns an iterator on all the keys in dictionary.
+
+##### keys(self) -> dictKeys
+
+##### wipeData(self) -> None
+
+Wipe all the data in shelve method. **This operation is NOT INVERTABLE, the data will lost forever.**
+

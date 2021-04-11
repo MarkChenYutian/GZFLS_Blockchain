@@ -53,7 +53,7 @@ class Transaction:
     def dumps(self, indent=0) -> str:
         """
         convert the current object to a string for web transport etc.
-        :return:
+        :return: JSON
         """
         info_dict = {
             "type": "Transaction",

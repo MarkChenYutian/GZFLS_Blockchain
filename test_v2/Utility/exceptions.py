@@ -129,3 +129,4 @@ class BlockChainNotAcceptException(BlockchainException):
     def __str__(self):
         return "The blockchain refused to add block into the chain. The block {} has height {} while a " \
                "minimum height of {} is required.".format(self.blockHash, self.blockHeight, self.minHeight + 1)
+
