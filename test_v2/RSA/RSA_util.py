@@ -34,7 +34,7 @@ def generateRSAKey(bits=1024, privateKeyPath="./RSA/PrivateKey.pem", publicKeyPa
         pubkey_file.write(privateKey.publickey().export_key())
 
 
-def loadKeys(pubKeyPath="./RSA/PrivateKey.pem", privateKeyPath="./RSA/PublicKey.pem") -> tuple:
+def loadKeys(pubKeyPath="./RSA/PublicKey.pem", privateKeyPath="./RSA/PrivateKey.pem") -> tuple:
     """
     Load Keys from file.
     :param pubKeyPath: The path of public key, can be None

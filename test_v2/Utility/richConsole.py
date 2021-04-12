@@ -29,4 +29,4 @@ class console:
             f.write("[INFO]    " + msg + "\n")
 
         # the below line is disabled such that info level log won't be printed to the console.
-        # cls.c.log("\r[blue]INFO[/blue]     " + msg, _stack_offset=2)
+        cls.c.log("\r[blue]INFO[/blue]     " + msg, _stack_offset=2)

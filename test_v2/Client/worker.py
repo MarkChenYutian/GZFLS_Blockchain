@@ -101,8 +101,7 @@ def Worker(mainQueue: mp.Queue, taskQueue: mp.Queue):
                 
                 Add an transaction object into the current block.
                 """
-                if :
-
+                pass
 
             else:
                 console.error("Unrecognized Task {}".format(json.dumps(newTask)))
