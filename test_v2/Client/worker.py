@@ -20,6 +20,7 @@ from Block.block import Block
 from Ledger.ledger import Ledger
 from Client.workerFn import *
 
+DIFFICULTY = 5
 
 def Worker(mainQueue: mp.Queue, taskQueue: mp.Queue):
     # Initialization
@@ -28,7 +29,7 @@ def Worker(mainQueue: mp.Queue, taskQueue: mp.Queue):
     ledger = Ledger(dataPath="Ledger.db")
     chain = Blockchain(dataPath="Blockchain.db")
     # Use some hack here to initialize block.
-    currBlock = workerCreateBlock(newTask={"args": [5]}, chain=chain)
+    currBlock = workerCreateBlock(newTask={"args": [DIFFICULTY]}, chain=chain)
 
     # Runner Part
     while True:
